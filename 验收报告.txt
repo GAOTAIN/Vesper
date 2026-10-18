@@ -1,0 +1,136 @@
+# Vesper 1.0.0 配色与品牌升级验收
+
+项目根目录：E:\模拟AI。测试时间：2026/10/18 17:27:13（北京时间）。
+
+产物：dist/Vesper-1.0.0-portable.exe；Windows x64、portable、未签名。体积 94,435,213 字节（90.1 MiB）。
+
+SHA-256：`2e11984df2b3d2493c09b60941274e6f4530e0fb0df92129fdb21e1a80d9dcda`
+
+## 修改文件与摘要
+
+| 文件 | 修改摘要 |
+|---|---|
+| package.json、package-lock.json | 统一为 Vesper 品牌；appId 为 com.vesper.app；产物名 Vesper-${version}-portable.exe。 |
+| main.js | 更新窗口与应用名称；首帧背景读取 CSS 变量；等待主题资源就绪后显示窗口。网络、存储及加密实现保持原逻辑。 |
+| preload.js | 最小页面 API 名称更新为 vesper；增加不带参数的主题就绪通知。 |
+| renderer/index.html | 统一品牌文案；三处图标使用同一外部 SVG；本地加载双高亮主题；主题选项改为白蓝／黑蓝。 |
+| renderer/app.js | 更新品牌及 API 引用；显式同步系统主题、手选主题与 SVG/高亮作用域。 |
+| renderer/styles.css | 集中所有 UI 与语法色变量；替换全部旧配色；同步焦点、徽章、滚动条和按钮；修正实心蓝及辅助文字透明度的对比度。 |
+| renderer/themes/github.css、renderer/themes/github-dark.css | 由本地 highlight.js 原版规则生成；仅作用于各主题代码块；语法色全部引用集中变量。 |
+| assets/icon.svg | 替换为左右对称开口弧与中心圆点；统一圆头线条，透明背景，使用 currentColor。 |
+| build/icon.ico、build/icon.png、build/icon-preview.png | 重新生成蓝色静态 ICO，含 16/32/48/64/128/256 像素；提供 PNG 及双背景尺寸检查图。 |
+| scripts/generate-icon.cjs | 从 CSS 读取导出蓝色，生成多尺寸 ICO。 |
+| scripts/prepare.cjs、scripts/prepare-themes.cjs | 安装时本地打包依赖，并从本地 npm 主题生成变量化样式。 |
+| scripts/run.cjs | 测试隔离目录环境变量随品牌更新，构建参数与路径策略保持不变。 |
+| scripts/core-test.cjs | 更新品牌测试数据与多尺寸 ICO 检查。 |
+| scripts/smoke.cjs | 增加主题实际样式、蓝色焦点、SVG、辅助文字透明度、20 次切换与系统跟随检查。 |
+| scripts/theme-audit.cjs | 新增旧色、旧品牌、硬编码色值与 WCAG 对比度静态审计。 |
+| README.md、配色验收报告.md、验收报告.txt | 更新运行、构建、图标、数据目录说明与本次验收结果。 |
+| dist/Vesper-1.0.0-portable.exe | 重新构建 Windows x64 单文件免安装程序。 |
+
+## 颜色变量对照表
+
+| 变量名 | 深色值 | 浅色值 |
+|---|---|---|
+| --bg-app | #0E1014 | #FFFFFF |
+| --bg-panel | #15181E | #F7F8FA |
+| --bg-elevated | #1B1F26 | #FFFFFF |
+| --bg-code | #0A0C0F | #F3F4F6 |
+| --text-primary | #E8EAED | #14171C |
+| --text-secondary | #9AA1AB | #5C6370 |
+| --text-muted | #6B7280 | #8A919C |
+| --border | #252A32 | #E4E7EC |
+| --accent | #4C7DFF | #3A63E8 |
+| --accent-hover | #6B93FF | #2A4FCB |
+| --accent-soft | rgba(76,125,255,0.14) | rgba(58,99,232,0.10) |
+| --bubble-user | #1C2740 | #EEF3FF |
+| --danger | #E5484D | #D93A3F |
+| --icon-color | #6B93FF | #3A63E8 |
+| --icon-export | #3A63E8 | #3A63E8 |
+| --badge-neutral | rgba(255,255,255,0.08) | #EEF0F3 |
+| --on-accent | #FFFFFF | #FFFFFF |
+| --accent-solid | #3A63E8 | var(--accent) |
+| --accent-solid-hover | #2A4FCB | var(--accent-hover) |
+| --overlay | rgba(0,0,0,0.48) | rgba(14,16,20,0.34) |
+| --shadow-color | rgba(0,0,0,0.24) | rgba(14,16,20,0.08) |
+
+实心按钮与在线徽章使用 --accent-solid / --accent-solid-hover，以同时满足蓝色和白字对比度。--accent 与 --accent-hover 仍保留用户指定的深浅主题值。--danger 按要求保留定义；为遵循整体 UI 仅黑白蓝，当前错误提示采用蓝色及中文说明。
+
+## 本地 GitHub 语法色变量
+
+以下原版语法色仅由各自主题代码块中的 Token 规则使用。深色主题会继承未使用的浅色变量，这不影响实际作用域。
+
+| 变量名 | 深色值 | 浅色值 |
+|---|---|---|
+| --syntax-24292e | #24292e | #24292e |
+| --syntax-ffffff | #ffffff | #ffffff |
+| --syntax-d73a49 | #d73a49 | #d73a49 |
+| --syntax-6f42c1 | #6f42c1 | #6f42c1 |
+| --syntax-005cc5 | #005cc5 | #005cc5 |
+| --syntax-032f62 | #032f62 | #032f62 |
+| --syntax-e36209 | #e36209 | #e36209 |
+| --syntax-6a737d | #6a737d | #6a737d |
+| --syntax-22863a | #22863a | #22863a |
+| --syntax-735c0f | #735c0f | #735c0f |
+| --syntax-f0fff4 | #f0fff4 | #f0fff4 |
+| --syntax-b31d28 | #b31d28 | #b31d28 |
+| --syntax-ffeef0 | #ffeef0 | #ffeef0 |
+| --syntax-c9d1d9 | #c9d1d9 | 未定义（该主题不用） |
+| --syntax-0d1117 | #0d1117 | 未定义（该主题不用） |
+| --syntax-ff7b72 | #ff7b72 | 未定义（该主题不用） |
+| --syntax-d2a8ff | #d2a8ff | 未定义（该主题不用） |
+| --syntax-79c0ff | #79c0ff | 未定义（该主题不用） |
+| --syntax-a5d6ff | #a5d6ff | 未定义（该主题不用） |
+| --syntax-ffa657 | #ffa657 | 未定义（该主题不用） |
+| --syntax-8b949e | #8b949e | 未定义（该主题不用） |
+| --syntax-7ee787 | #7ee787 | 未定义（该主题不用） |
+| --syntax-1f6feb | #1f6feb | 未定义（该主题不用） |
+| --syntax-f2cc60 | #f2cc60 | 未定义（该主题不用） |
+| --syntax-aff5b4 | #aff5b4 | 未定义（该主题不用） |
+| --syntax-033a16 | #033a16 | 未定义（该主题不用） |
+| --syntax-ffdcd7 | #ffdcd7 | 未定义（该主题不用） |
+| --syntax-67060c | #67060c | 未定义（该主题不用） |
+
+## 九项回归验收
+
+| 项 | 结果 | 实测依据与限制 |
+|---|---|---|
+| 1 | 通过 | 旧三色全局检索在自有源码中均为 0 命中，旧品牌也为 0 命中。 |
+| 2 | 通过 | 18 个源码/配置文件（含合并后的 vendor.js）完成审计。色值仅位于 styles.css 顶部 :root 与深色变量块；HTML、JS、SVG 和高亮主题中无散落十六进制色值。 |
+| 3 | 通过 | 深色实测 body 背景 rgb(14,16,20)，侧栏 rgb(21,24,30)，蓝色图标与按钮；github-dark 关键字颜色按原版生效。除代码 Token 外 UI 使用黑白灰蓝。 |
+| 4 | 通过 | 浅色实测 body 背景 rgb(255,255,255)，侧栏 rgb(247,248,250)，正文近黑；github 关键字颜色按原版生效。 |
+| 5 | 通过 | 窗口中检查背景、文字、边框、用户气泡、按钮、代码块、SVG 和高亮；快速切换 20 次及切换系统主题均通过。双高亮样式预载，主题由同一个属性同步选择；首帧等待主题与资源就绪，不播放颜色过渡。静态截图复核未见残留旧色。 |
+| 6 | 通过 | 直接从 ICO 抽取 16/32/256 像素 PNG，分别合成在指定深、浅背景上检查；三种尺寸的双弧与中心点均可辨识。另有 48/64/128 像素帧。 |
+| 7 | 通过 | 正文在所有应用实色背景上最低 12.33:1；辅助文字最低 5.44:1；白字实心按钮 5.08:1、悬停 6.82:1。深色辅助文字本已达标，保持原值。对比度修正应用于独立的实心蓝变量，保留指定主蓝；已取消辅助文字的降透明度。禁用控件不计入 WCAG 文本对比度要求。 |
+| 8 | EXE 通过；开发命令受限 | portable 已在普通 Windows 桌面会话独立启动，深浅主题、代码高亮、关闭重开恢复已验证。生产包、自检包 10 个运行文件与源码逐字节一致。Codex 受限终端中的 npm start 实测退出 1，未声称该命令已在此沙箱通过；开发态的普通桌面直接启动对照尚未完成。复核办法：在普通 PowerShell 执行本文开发运行命令。 |
+| 9 | 通过 | 模拟徽章为中性灰、在线徽章为蓝底白字；实际 IPC 切换在线模式后的徽章背景与实心蓝按钮一致，窗口截图复核模拟灰。 |
+
+检索范围为项目自有运行、构建和测试源码，包括 renderer/vendor.js；排除 node_modules、dist、缓存、测试数据及本报告的文档色表。文档展示色值不属于 UI 硬编码。
+
+## 功能回归与数据
+
+7 项核心检查通过；10 项完整窗口检查通过。后者使用独立测试配置，在普通桌面会话运行同一主进程、预加载脚本与页面资源，生产应用不含自检入口。真实请求转发、SSE、停止、safeStorage、会话与窗口状态持久化均已用本机兼容服务验证；未提供真实云端密钥，因此不声称已验证任何云端账户。
+
+品牌升级后使用 %APPDATA%\Vesper；原数据目录没有删除或改写。密钥仍仅在本机加密保存，在线请求仅发送至用户配置的接口。布局尺寸、设置字段顺序、模拟和在线功能保持原实现。
+
+旧品牌 portable EXE 在尝试归档时仍被旧运行进程占用，未强行终止或删除；关闭旧版后可自行移走 dist 内的旧文件。新的 Vesper EXE 文件名与旧版明确区分，自有源码和新包内已清理旧品牌及笑脸。
+
+## 安装与开发运行
+
+本次 npm install（离线缓存、foreground-scripts）退出 0，postinstall 成功；npm 对两个上游依赖脚本给出 allow-scripts 警告，但本地准备步骤与构建均成功。
+
+```powershell
+cd E:\模拟AI
+npm.cmd install
+npm.cmd start
+```
+
+## 重新打包（三行）
+
+```powershell
+cd E:\模拟AI
+npm.cmd install
+npm.cmd run dist
+```
+
+自检：node scripts/theme-audit.cjs、npm.cmd run test:core、npm.cmd test。Codex 外层限制嵌套 Electron 启动，完整窗口自检本次采用临时独立自检包。普通 Windows 环境无需本次沙箱使用的临时构建适配器。首次启动未签名程序时的 Defender/SmartScreen 说明见 README。

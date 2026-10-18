@@ -1,0 +1,119 @@
+/* 本地 highlight.js github-dark；保留上游语法规则，颜色集中在 styles.css。
+
+  Theme: GitHub Dark
+  Description: Dark theme as seen on github.com
+  Author: github.com
+  Maintainer: @Hirse
+  Updated: 2021-05-15
+
+  Outdated base version: https://github.com/primer/github-syntax-dark
+  Current colors taken from GitHub's CSS
+*/
+[data-theme="dark"] .code-block pre code.hljs{
+  display: block;
+  overflow-x: auto;
+  padding: 1em
+}
+[data-theme="dark"] .code-block code.hljs{
+  padding: 3px 5px
+}
+[data-theme="dark"] .code-block .hljs{
+  color: var(--syntax-c9d1d9);
+  background: var(--syntax-0d1117)
+}
+[data-theme="dark"] .code-block .hljs-doctag,
+[data-theme="dark"] .code-block .hljs-keyword,
+[data-theme="dark"] .code-block .hljs-meta .hljs-keyword,
+[data-theme="dark"] .code-block .hljs-template-tag,
+[data-theme="dark"] .code-block .hljs-template-variable,
+[data-theme="dark"] .code-block .hljs-type,
+[data-theme="dark"] .code-block .hljs-variable.language_{
+  
+  color: var(--syntax-ff7b72)
+}
+[data-theme="dark"] .code-block .hljs-title,
+[data-theme="dark"] .code-block .hljs-title.class_,
+[data-theme="dark"] .code-block .hljs-title.class_.inherited__,
+[data-theme="dark"] .code-block .hljs-title.function_{
+  
+  color: var(--syntax-d2a8ff)
+}
+[data-theme="dark"] .code-block .hljs-attr,
+[data-theme="dark"] .code-block .hljs-attribute,
+[data-theme="dark"] .code-block .hljs-literal,
+[data-theme="dark"] .code-block .hljs-meta,
+[data-theme="dark"] .code-block .hljs-number,
+[data-theme="dark"] .code-block .hljs-operator,
+[data-theme="dark"] .code-block .hljs-variable,
+[data-theme="dark"] .code-block .hljs-selector-attr,
+[data-theme="dark"] .code-block .hljs-selector-class,
+[data-theme="dark"] .code-block .hljs-selector-id{
+  
+  color: var(--syntax-79c0ff)
+}
+[data-theme="dark"] .code-block .hljs-regexp,
+[data-theme="dark"] .code-block .hljs-string,
+[data-theme="dark"] .code-block .hljs-meta .hljs-string{
+  
+  color: var(--syntax-a5d6ff)
+}
+[data-theme="dark"] .code-block .hljs-built_in,
+[data-theme="dark"] .code-block .hljs-symbol{
+  
+  color: var(--syntax-ffa657)
+}
+[data-theme="dark"] .code-block .hljs-comment,
+[data-theme="dark"] .code-block .hljs-code,
+[data-theme="dark"] .code-block .hljs-formula{
+  
+  color: var(--syntax-8b949e)
+}
+[data-theme="dark"] .code-block .hljs-name,
+[data-theme="dark"] .code-block .hljs-quote,
+[data-theme="dark"] .code-block .hljs-selector-tag,
+[data-theme="dark"] .code-block .hljs-selector-pseudo{
+  
+  color: var(--syntax-7ee787)
+}
+[data-theme="dark"] .code-block .hljs-subst{
+  
+  color: var(--syntax-c9d1d9)
+}
+[data-theme="dark"] .code-block .hljs-section{
+  
+  color: var(--syntax-1f6feb);
+  font-weight: bold
+}
+[data-theme="dark"] .code-block .hljs-bullet{
+  
+  color: var(--syntax-f2cc60)
+}
+[data-theme="dark"] .code-block .hljs-emphasis{
+  
+  color: var(--syntax-c9d1d9);
+  font-style: italic
+}
+[data-theme="dark"] .code-block .hljs-strong{
+  
+  color: var(--syntax-c9d1d9);
+  font-weight: bold
+}
+[data-theme="dark"] .code-block .hljs-addition{
+  
+  color: var(--syntax-aff5b4);
+  background-color: var(--syntax-033a16)
+}
+[data-theme="dark"] .code-block .hljs-deletion{
+  
+  color: var(--syntax-ffdcd7);
+  background-color: var(--syntax-67060c)
+}
+[data-theme="dark"] .code-block .hljs-char.escape_,
+[data-theme="dark"] .code-block .hljs-link,
+[data-theme="dark"] .code-block .hljs-params,
+[data-theme="dark"] .code-block .hljs-property,
+[data-theme="dark"] .code-block .hljs-punctuation,
+[data-theme="dark"] .code-block .hljs-tag{
+  
+  
+}

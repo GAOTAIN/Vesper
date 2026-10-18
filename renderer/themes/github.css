@@ -1,0 +1,119 @@
+/* 本地 highlight.js github；保留上游语法规则，颜色集中在 styles.css。
+
+  Theme: GitHub
+  Description: Light theme as seen on github.com
+  Author: github.com
+  Maintainer: @Hirse
+  Updated: 2021-05-15
+
+  Outdated base version: https://github.com/primer/github-syntax-light
+  Current colors taken from GitHub's CSS
+*/
+[data-theme="light"] .code-block pre code.hljs{
+  display: block;
+  overflow-x: auto;
+  padding: 1em
+}
+[data-theme="light"] .code-block code.hljs{
+  padding: 3px 5px
+}
+[data-theme="light"] .code-block .hljs{
+  color: var(--syntax-24292e);
+  background: var(--syntax-ffffff)
+}
+[data-theme="light"] .code-block .hljs-doctag,
+[data-theme="light"] .code-block .hljs-keyword,
+[data-theme="light"] .code-block .hljs-meta .hljs-keyword,
+[data-theme="light"] .code-block .hljs-template-tag,
+[data-theme="light"] .code-block .hljs-template-variable,
+[data-theme="light"] .code-block .hljs-type,
+[data-theme="light"] .code-block .hljs-variable.language_{
+  
+  color: var(--syntax-d73a49)
+}
+[data-theme="light"] .code-block .hljs-title,
+[data-theme="light"] .code-block .hljs-title.class_,
+[data-theme="light"] .code-block .hljs-title.class_.inherited__,
+[data-theme="light"] .code-block .hljs-title.function_{
+  
+  color: var(--syntax-6f42c1)
+}
+[data-theme="light"] .code-block .hljs-attr,
+[data-theme="light"] .code-block .hljs-attribute,
+[data-theme="light"] .code-block .hljs-literal,
+[data-theme="light"] .code-block .hljs-meta,
+[data-theme="light"] .code-block .hljs-number,
+[data-theme="light"] .code-block .hljs-operator,
+[data-theme="light"] .code-block .hljs-variable,
+[data-theme="light"] .code-block .hljs-selector-attr,
+[data-theme="light"] .code-block .hljs-selector-class,
+[data-theme="light"] .code-block .hljs-selector-id{
+  
+  color: var(--syntax-005cc5)
+}
+[data-theme="light"] .code-block .hljs-regexp,
+[data-theme="light"] .code-block .hljs-string,
+[data-theme="light"] .code-block .hljs-meta .hljs-string{
+  
+  color: var(--syntax-032f62)
+}
+[data-theme="light"] .code-block .hljs-built_in,
+[data-theme="light"] .code-block .hljs-symbol{
+  
+  color: var(--syntax-e36209)
+}
+[data-theme="light"] .code-block .hljs-comment,
+[data-theme="light"] .code-block .hljs-code,
+[data-theme="light"] .code-block .hljs-formula{
+  
+  color: var(--syntax-6a737d)
+}
+[data-theme="light"] .code-block .hljs-name,
+[data-theme="light"] .code-block .hljs-quote,
+[data-theme="light"] .code-block .hljs-selector-tag,
+[data-theme="light"] .code-block .hljs-selector-pseudo{
+  
+  color: var(--syntax-22863a)
+}
+[data-theme="light"] .code-block .hljs-subst{
+  
+  color: var(--syntax-24292e)
+}
+[data-theme="light"] .code-block .hljs-section{
+  
+  color: var(--syntax-005cc5);
+  font-weight: bold
+}
+[data-theme="light"] .code-block .hljs-bullet{
+  
+  color: var(--syntax-735c0f)
+}
+[data-theme="light"] .code-block .hljs-emphasis{
+  
+  color: var(--syntax-24292e);
+  font-style: italic
+}
+[data-theme="light"] .code-block .hljs-strong{
+  
+  color: var(--syntax-24292e);
+  font-weight: bold
+}
+[data-theme="light"] .code-block .hljs-addition{
+  
+  color: var(--syntax-22863a);
+  background-color: var(--syntax-f0fff4)
+}
+[data-theme="light"] .code-block .hljs-deletion{
+  
+  color: var(--syntax-b31d28);
+  background-color: var(--syntax-ffeef0)
+}
+[data-theme="light"] .code-block .hljs-char.escape_,
+[data-theme="light"] .code-block .hljs-link,
+[data-theme="light"] .code-block .hljs-params,
+[data-theme="light"] .code-block .hljs-property,
+[data-theme="light"] .code-block .hljs-punctuation,
+[data-theme="light"] .code-block .hljs-tag{
+  
+  
+}

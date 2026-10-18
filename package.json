@@ -1,0 +1,36 @@
+{
+  "name": "vesper",
+  "version": "1.0.0",
+  "description": "Vesper · 离线模拟与在线模型双模式聊天客户端",
+  "main": "main.js",
+  "author": "Vesper",
+  "license": "MIT",
+  "scripts": {
+    "postinstall": "node scripts/prepare.cjs",
+    "start": "electron .",
+    "icons": "node scripts/generate-icon.cjs",
+    "test": "node scripts/run.cjs test",
+    "test:core": "node scripts/core-test.cjs",
+    "dist": "npm run icons && node scripts/run.cjs build"
+  },
+  "dependencies": {
+    "markdown-it": "15.0.3",
+    "highlight.js": "11.12.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "electron": "43.8.0",
+    "electron-builder": "26.15.3",
+    "sharp": "0.35.5"
+  },
+  "build": {
+    "appId": "com.vesper.app",
+    "productName": "Vesper",
+    "asar": true,
+    "npmRebuild": false,
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": ["main.js", "preload.js", "renderer/**/*", "assets/icon.svg", "build/icon.ico", "package.json"],
+    "win": { "target": [{ "target": "portable", "arch": ["x64"] }], "icon": "build/icon.ico" },
+    "portable": { "artifactName": "Vesper-${version}-portable.exe" }
+  }
+}

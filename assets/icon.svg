@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- 左右对称开口弧与中心实心点，线条统一、圆头、透明底。 -->
+  <g id="vesper-icon">
+    <g fill="none" stroke="currentColor" stroke-width="16" stroke-linecap="round">
+      <path d="M96 60C62 70 40 96 40 128S62 186 96 196"/>
+      <path d="M160 60C194 70 216 96 216 128S194 186 160 196"/>
+    </g>
+    <circle cx="128" cy="128" r="14" fill="currentColor"/>
+  </g>
+</svg>

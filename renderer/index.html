@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Vesper</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="themes/github.css" data-highlight="light">
+  <link rel="stylesheet" href="themes/github-dark.css" data-highlight="dark">
+  <script src="vendor.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div id="shell" class="shell">
+    <aside class="sidebar" aria-label="会话侧边栏">
+      <div class="brand"><svg class="app-icon" viewBox="0 0 256 256" role="img" aria-label="Vesper"><use href="../assets/icon.svg#vesper-icon"></use></svg><div><strong>Vesper<span class="brand-dot">•</span></strong><span class="brand-en">VESPER</span></div><button id="collapse" class="icon-btn" title="折叠侧边栏" aria-label="折叠侧边栏">◧</button></div>
+      <button id="newChat" class="new-chat"><span>＋</span><span class="sidebar-label">新建对话</span><kbd>Ctrl N</kbd></button>
+      <div class="section-label sidebar-label">你的对话 <span>本机保存</span></div>
+      <nav id="chatList" class="chat-list" aria-label="会话列表"></nav>
+      <div class="sidebar-bottom"><div class="local-note sidebar-label"><span class="small-dot"></span>给想法，一点生长的空间。</div><button id="settingsOpen" class="settings-entry"><span class="settings-symbol">⚙</span><span class="sidebar-label">设置与偏好</span><span id="sideMode" class="side-mode"></span></button></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div class="title-group"><button id="expand" class="icon-btn" title="展开侧边栏" aria-label="展开侧边栏" hidden>◧</button><h1 id="chatTitle">新的对话</h1><span id="modeBadge" class="badge">模拟模式</span></div><button id="clearChat" class="quiet-btn" title="清空当前对话">清空对话</button></header>
+      <section id="chatScroll" class="chat-scroll" aria-label="聊天内容" tabindex="0">
+        <div id="emptyState" class="empty-state"><div class="eyebrow">一个小小的开始</div><svg class="app-icon hero-icon" viewBox="0 0 256 256" role="img" aria-label="Vesper 头像"><use href="../assets/icon.svg#vesper-icon"></use></svg><h2>你好，我是Vesper<span>。</span></h2><p>随手写下一个问题，让想法慢慢展开。</p><div class="examples"><button data-example="帮我制定一个轻松的学习计划"><span>✧</span><strong>把目标变成小步骤</strong><small>一起整理学习计划 ↗</small></button><button data-example="用 JavaScript 写一个简单函数"><span>⌘</span><strong>从一小段代码开始</strong><small>看看代码与高亮效果 ↗</small></button><button data-example="用表格比较两种做事方法"><span>▤</span><strong>换个角度想问题</strong><small>用表格理清不同选择 ↗</small></button></div><div id="emptyMode" class="empty-mode"><span class="small-dot"></span>模拟模式已就绪 · 无需网络或密钥</div></div>
+        <div id="messages" class="messages"></div>
+      </section>
+      <div class="composer-area"><button id="jumpBottom" class="jump-bottom" hidden>↓ 回到最新消息</button><form id="composer" class="composer"><textarea id="messageInput" rows="1" maxlength="32000" placeholder="和Vesper聊点什么…" aria-label="消息输入框"></textarea><div class="composer-toolbar"><span id="composerMode">本地灵感，随时开始</span><button id="sendButton" type="submit" class="send-button" aria-label="发送消息">↑</button></div></form><div class="composer-caption"><span>Enter 发送 · Shift + Enter 换行</span><span id="disclaimer">模拟回复由本地模板生成，请勿作为事实依据</span></div></div>
+    </main>
+  </div>
+  <div id="settingsOverlay" class="overlay" hidden>
+    <section id="settingsPanel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" tabindex="-1">
+      <header class="drawer-header"><div><span class="eyebrow">让Vesper更合你意</span><h2 id="settingsTitle">设置与偏好</h2></div><button id="settingsClose" class="icon-btn" aria-label="关闭设置">×</button></header>
+      <form id="settingsForm" class="settings-body">
+        <fieldset><legend>对话模式</legend><div class="mode-options"><label><input type="radio" name="mode" value="simulation"><span><strong>模拟模式</strong><small>离线模板 · 无需密钥</small></span></label><label><input type="radio" name="mode" value="online"><span><strong>在线模式</strong><small>连接你选择的模型</small></span></label></div></fieldset>
+        <div class="field"><label for="baseURL">接口地址 <span>Base URL</span></label><input id="baseURL" type="url" required placeholder="https://api.openai.com/v1"><small>填写到 /v1 层级；请勿包含 /chat/completions。</small></div>
+        <div class="field"><label for="apiKey">API 密钥 <span id="keyHint">未保存</span></label><div class="input-action"><input id="apiKey" type="password" autocomplete="off" spellcheck="false" placeholder="填写你的 API Key"><button id="showKey" type="button">显示</button></div><label class="checkbox-label"><input id="removeKey" type="checkbox">移除已保存的密钥</label></div>
+        <div class="field"><label for="model">模型名称</label><input id="model" required maxlength="200" placeholder="gpt-4o-mini"><div class="presets" aria-label="模型快捷预设"><button type="button" data-preset="openai">OpenAI</button><button type="button" data-preset="deepseek">DeepSeek</button><button type="button" data-preset="moonshot">Moonshot</button><button type="button" data-preset="zhipu">智谱</button><button type="button" data-preset="ollama">本地 Ollama</button></div><small>预设会填入地址与模型；不同服务请使用各自的密钥。</small></div>
+        <div class="field"><label for="temperature">创造性 <span>Temperature · <output id="temperatureValue">0.7</output></span></label><input id="temperature" type="range" min="0" max="1.5" step="0.1" value="0.7"><div class="range-labels"><span>更稳定</span><span>更发散</span></div></div>
+        <div class="field"><label for="systemPrompt">系统提示词</label><textarea id="systemPrompt" rows="3" maxlength="20000"></textarea><small>用于在线模式；模拟模式使用内置规则。</small></div>
+        <div class="field"><label for="theme">外观主题</label><select id="theme"><option value="system">跟随系统</option><option value="light">浅色 · 白蓝</option><option value="dark">深色 · 黑蓝</option></select></div>
+        <div class="privacy-note"><span>◇</span><p>密钥只保存在本机，并由 Windows 本机加密保护，不上传到任何第三方存储。在线请求会将密钥与对话发送给你设置的接口提供方。</p></div>
+        <button id="testConnection" type="button" class="test-button">测试连接</button><p id="connectionResult" class="connection-result" role="status"></p>
+        <footer class="drawer-footer"><span>保存后立即生效</span><button id="saveSettings" type="submit" class="primary-button">保存设置</button></footer>
+      </form>
+    </section>
+  </div>
+  <dialog id="actionDialog"><form id="actionForm"><h2 id="actionTitle"></h2><p id="actionDescription"></p><input id="actionInput" maxlength="80" aria-label="会话名称"><div class="dialog-actions"><button id="actionCancel" type="button" class="quiet-btn">取消</button><button type="submit" class="primary-button">确认</button></div></form></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>
