@@ -1,6 +1,6 @@
 {
   "name": "vesper",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Vesper · 离线模拟与在线模型双模式聊天客户端",
   "main": "main.js",
   "author": "Vesper",
@@ -11,6 +11,7 @@
     "icons": "node scripts/generate-icon.cjs",
     "test": "node scripts/run.cjs test",
     "test:core": "node scripts/core-test.cjs",
+    "test:simulation": "node scripts/simulation-test.cjs",
     "dist": "npm run icons && node scripts/run.cjs build"
   },
   "dependencies": {

@@ -1,4 +1,4 @@
-# Vesper 1.0.0
+# Vesper 1.0.1
 
 [下载 Windows x64 免安装 EXE](https://github.com/GAOTAIN/Vesper/releases/latest) · [GitHub 源码仓库](https://github.com/GAOTAIN/Vesper)
 
@@ -6,7 +6,7 @@ Windows 桌面聊天客户端。默认使用完全离线的本地规则和模板
 
 ## 直接运行
 
-双击 `dist\Vesper-1.0.0-portable.exe`。这是 Windows x64 免安装单文件，目标电脑无需 Node.js。便携程序启动时会将 Electron 运行文件解压到系统临时目录；首次打开可能稍慢，关闭后由启动器清理。持久数据保存在当前 Windows 账户的用户数据目录，不保存在 EXE 旁边。
+双击 `dist\Vesper-1.0.1-portable.exe`。这是 Windows x64 免安装单文件，目标电脑无需 Node.js。便携程序启动时会将 Electron 运行文件解压到系统临时目录；首次打开可能稍慢，关闭后由启动器清理。持久数据保存在当前 Windows 账户的用户数据目录，不保存在 EXE 旁边。
 
 首次运行可能被 Windows Defender 或 SmartScreen 提示拦截，这是未签名程序可能出现的提示。确认文件来自你信任的本项目构建后，选择「更多信息 → 仍要运行」。本项目没有购买或嵌入代码签名证书。
 
@@ -33,7 +33,7 @@ PowerShell 执行策略限制 `npm.ps1` 时使用 `npm.cmd`，无需修改全局
 
 ## 模式与连接
 
-**模拟模式（默认）：** 本地识别问候、代码、翻译、闲聊、计划和比较等意图，组合模板，普通文字回复随机 2–5 句。开始前思考 300–800ms，每个字符延迟 15–45ms。能引用上一条用户消息的关键词，代码与表格意图包含 Markdown 演示。翻译仅有少量短语词库，不具备真实模型推理能力。每条模拟回复都标注「（模拟模式 · 未连接真实模型）」。
+**模拟模式（默认）：** 本地识别项目需求、相关追问、问候、代码、翻译、闲聊和学习计划。吃货地图、记账、待办、笔记等场景会给出具体功能、数据字段和后续步骤，能在相关追问中保留平台选择，并识别“不做登录”“先不做地图”等约束；问候不会被硬套成上下文，新话题也不会搬用旧项目。开始前思考 300–800ms，每个字符延迟 15–45ms。代码与表格均可离线展示。本地规则不具备真实模型的开放问答能力，对未知问题会请求具体信息或说明能力边界；翻译仅支持少量常见短语。每条模拟回复都保留「（模拟模式 · 未连接真实模型）」标识。
 
 **在线模式：** 打开设置，选择在线模式，填写接口地址、密钥和准确的模型名，点击「测试连接」，保存后立即用于下一条消息。正在生成的回复继续使用发送时的模式，各条回复上方保留来源标记。
 
@@ -73,7 +73,7 @@ npm.cmd install
 npm.cmd run dist
 ```
 
-产物：`E:\模拟AI\dist\Vesper-1.0.0-portable.exe`。`dist\win-unpacked` 是构建中间目录，分享时只需发送 portable EXE。打包配置为 `appId: com.vesper.app`、`productName: Vesper`、Windows x64 `portable`，图标为 `build/icon.ico`。
+产物：`E:\模拟AI\dist\Vesper-1.0.1-portable.exe`。`dist\win-unpacked` 是构建中间目录，分享时只需发送 portable EXE。打包配置为 `appId: com.vesper.app`、`productName: Vesper`、Windows x64 `portable`，图标为 `build/icon.ico`。
 
 `npm run icons` 从手写 `assets/icon.svg` 用 sharp 生成 256×256 的 `build/icon.png` 和含 16/32/48/64/128/256 像素 PNG 的 `build/icon.ico`。`npm install` 的 postinstall 使用 esbuild 把本地 markdown-it、highlight.js 合并成 `renderer/vendor.js`，没有引入前端框架。运行时没有 native npm 模块，所以禁用了多余的 native rebuild。
 
@@ -89,11 +89,11 @@ npm.cmd test
 
 自动检查使用 `work\test-profile-时间戳` 独立数据目录和本机 HTTP 测试服务，不修改日常用户数据，不使用真实 API Key。覆盖断网模拟、逐字输出、上下文、IPC、安全边界、代码高亮和复制、SSE 分包、表格、停止、连接测试、中文错误、加速时钟的超时逻辑、加密、会话操作、最小窗口和关闭重建持久化。`work\test-results.json` 保存结果。
 
-本机兼容服务测试不能替代真实云端接口验收；没有用户自己的真实密钥时，不会声称已验证 OpenAI 等云端模型。实际本次交付结果见 `验收报告.txt`。
+本机兼容服务测试不能替代真实云端接口验收；没有用户自己的真实密钥时，不会声称已验证 OpenAI 等云端模型。`验收报告.txt` 与 `配色验收报告.md` 保留 1.0.0 配色版本的历史结果，1.0.1 的模拟改进见本页后文。
 
-本次使用 Node.js 24.19.0、npm 11.17.0、Electron 43.8.0、electron-builder 26.15.3。7 项核心检查和 10 项完整窗口检查均已通过，另有主题静态审计和 WCAG 对比度检查。完整窗口检查另行打包为临时自检程序，在普通桌面会话运行，以避开 Codex 外层沙箱对嵌套 Electron 进程的限制；该自检程序不属于交付应用。
+本次使用 Node.js 24.19.0、npm 11.17.0、Electron 43.8.0、electron-builder 26.15.3。7 项核心检查、23 项模拟场景检查及 11 项完整窗口检查均已通过，另有主题静态审计和 WCAG 对比度检查。1.0.1 的完整窗口检查直接通过 npm.cmd test 在独立数据目录后台运行，测试入口不随生产应用打包。
 
-本次 Vesper 版本直接以本目录为项目根构建 portable EXE，并核对生产包、自检包与源码的运行资源一致性。普通 Windows PowerShell 使用上面的三行命令即可。重新打包前请先关闭正在运行的Vesper，避免 Windows 锁定旧 EXE。
+本次 Vesper 版本直接以本目录为项目根构建 portable EXE，并核对生产包与源码的运行资源一致性。普通 Windows PowerShell 使用上面的三行命令即可。重新打包前请先关闭正在运行的 Vesper，避免 Windows 锁定旧 EXE。
 
 如果开发启动出现 `Sandboxed processes cannot read ...`，在项目根目录的普通 PowerShell 执行下面命令，给下载的 Electron 运行库增加读取/执行权限后重试；无需关闭 Electron 沙箱：
 
@@ -131,4 +131,11 @@ dist/                             单 EXE 与打包中间文件
 
 所有应用色值与代码语法色都集中在 renderer/styles.css 顶部变量中。两份本地 GitHub 高亮主题预载后由 data-theme 同步选择，切换时不请求资源。为满足白字对比度，实心按钮及在线徽章使用独立的实心蓝变量；深色链接等仍使用指定主蓝。代码 Token 采用 GitHub 原色，其余界面使用黑、白、灰、蓝。
 
-静态审计：`node scripts/theme-audit.cjs`。详细改动、颜色变量表与本次验收结果见 `配色验收报告.md`。
+静态审计：`node scripts/theme-audit.cjs`。配色版本的历史改动、颜色变量表与验收结果见 `配色验收报告.md`。
+
+
+## 1.0.1 模拟对话改进
+
+修复项目需求被通用模板敷衍、无条件引用上一句问候、代码关键词抢占解释或学习意图的问题。相关追问可承接项目、平台和约束，重复提问优先推进到下一步；未覆盖的问题不会被伪装成已经解答。
+
+运行 `npm.cmd run test:simulation` 检查 23 项模拟场景，`npm.cmd test` 包含吃货地图、网页版追问及业务代码的完整渲染链路。升级后请先关闭已运行的旧版本，再启动新的 EXE；新引擎只影响新回复，不修改历史记录。

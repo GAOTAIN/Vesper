@@ -88,13 +88,13 @@ function backgroundTestWindow() {
   await idle();
   await send('请给我 JavaScript 代码'); await idle();
   const text = await js(`document.querySelectorAll('.assistant .markdown')[1].innerText`);
-  assert.match(text, /延续刚才提到的「你好」/);
+  assert.doesNotMatch(text, /延续刚才|提到的「你好」/);
   assert.equal(await js(`Boolean(document.querySelector('.code-block .hljs-keyword'))`), true);
   await js(`document.querySelector('.copy-code').click()`); await pause(100);
   assert.match(require('electron').clipboard.readText(), /function greet/);
   assert.equal(simulationFetches, 0); global.fetch = originalFetch;
   assert.equal(await js(`document.getElementById('composer').getBoundingClientRect().bottom <= innerHeight`), true);
-  record('断网模拟连续对话、300–800ms 思考、逐字输出、上下文、代码高亮与复制');
+  record('断网模拟连续对话、300–800ms 思考、逐字输出、无无关问候引用、代码高亮与复制');
 
   // 验证实际计算样式、外部 SVG 引用、两个已加载高亮样式和系统跟随。
   const themeResults=[];
@@ -124,6 +124,27 @@ function backgroundTestWindow() {
   require('electron').nativeTheme.themeSource='system';
   fs.writeFileSync(path.join(reportRoot,'theme-results.json'),JSON.stringify(themeResults,null,2));
   record('双主题实际颜色、SVG 同步、GitHub 本地高亮、20 次切换与系统主题跟随');
+
+  // 单独创建测试会话验证截图中的问题，再切回原会话，避免影响后续网络历史断言。
+  const originalChat = (await invoke('load')).database.currentId;
+  const scenarioChat = await invoke('newChat');
+  const scenarioId = scenarioChat.database.currentId;
+  await js(`setData(${JSON.stringify(scenarioChat)})`);
+  await send('我想做过吃货地图的软件。你能帮我吗'); await idle();
+  assert.match(await js(`document.querySelector('.assistant .markdown').innerText`), /店铺|店名|收藏/);
+  assert.doesNotMatch(await js(`document.querySelector('.assistant .markdown').innerText`), /延续刚才|最小的行动|已经知道的信息/);
+  await pause(100);
+  fs.writeFileSync(path.join(reportRoot,'simulation-food-map.png'),(await win.webContents.capturePage()).toPNG());
+  await send('先做网页版'); await idle();
+  assert.match(await js(`document.querySelectorAll('.assistant .markdown')[1].innerText`), /网页版.*吃货地图/);
+  await send('代码呢'); await idle();
+  assert.match(await js(`document.querySelectorAll('.assistant .markdown')[2].innerText`), /filterShops/);
+  assert.equal(await js(`document.querySelectorAll('.simulation-foot').length`),3);
+  await pause(100);
+  fs.writeFileSync(path.join(reportRoot,'simulation-food-map-followup.png'),(await win.webContents.capturePage()).toPNG());
+  await invoke('deleteChat',scenarioId);
+  await js(`setData((await window.vesper.selectChat(${JSON.stringify(originalChat)})).value)`);
+  record('吃货地图真实问题、网页版追问、业务代码及模拟标识的完整渲染链路');
 
   // 直接渲染危险文本，确认 Markdown 不能执行 HTML 或加载远程图片。
   const xss = await js(`md.render('<img src=x onerror=alert(1)> ![远程](https://example.com/a.png)')`);
