@@ -1,0 +1,15 @@
+node_modules/
+.cache/
+dist/
+work/
+*.log
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+/settings.json
+/conversations.json
+/window.json
