@@ -1,6 +1,6 @@
 {
   "name": "vesper",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Vesper · 离线模拟与在线模型双模式聊天客户端",
   "main": "main.js",
   "author": "Vesper",
@@ -29,9 +29,31 @@
     "productName": "Vesper",
     "asar": true,
     "npmRebuild": false,
-    "directories": { "output": "dist", "buildResources": "build" },
-    "files": ["main.js", "preload.js", "renderer/**/*", "assets/icon.svg", "build/icon.ico", "package.json"],
-    "win": { "target": [{ "target": "portable", "arch": ["x64"] }], "icon": "build/icon.ico" },
-    "portable": { "artifactName": "Vesper-${version}-portable.exe" }
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "assets/icon.svg",
+      "build/icon.ico",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "portable": {
+      "artifactName": "Vesper-${version}-portable.exe"
+    }
   }
 }
