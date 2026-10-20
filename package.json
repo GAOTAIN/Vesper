@@ -1,7 +1,7 @@
 {
   "name": "vesper",
-  "version": "1.0.1",
-  "description": "Vesper · 离线模拟与在线模型双模式聊天客户端",
+  "version": "1.1.1",
+  "description": "Vesper · 离线模拟、在线模型与本地部署聊天客户端",
   "main": "main.js",
   "author": "Vesper",
   "license": "MIT",
@@ -12,16 +12,23 @@
     "test": "node scripts/run.cjs test",
     "test:core": "node scripts/core-test.cjs",
     "test:simulation": "node scripts/simulation-test.cjs",
-    "dist": "npm run icons && node scripts/run.cjs build"
+    "test:local": "node scripts/local-test.cjs",
+    "test:local-integration": "node scripts/local-integration.cjs",
+    "test:local-window": "node scripts/run.cjs local-test",
+    "dist": "npm run icons && node scripts/run.cjs build",
+    "test:installer": "node scripts/installer-test.cjs",
+    "test:installer-window": "node scripts/run.cjs installer-test",
+    "test:installer-network": "node scripts/installer-network-probe.cjs"
   },
   "dependencies": {
+    "highlight.js": "11.12.0",
     "markdown-it": "15.0.3",
-    "highlight.js": "11.12.0"
+    "systeminformation": "5.33.15"
   },
   "devDependencies": {
-    "esbuild": "0.28.2",
     "electron": "43.8.0",
     "electron-builder": "26.15.3",
+    "esbuild": "0.28.2",
     "sharp": "0.35.5"
   },
   "build": {
@@ -29,9 +36,33 @@
     "productName": "Vesper",
     "asar": true,
     "npmRebuild": false,
-    "directories": { "output": "dist", "buildResources": "build" },
-    "files": ["main.js", "preload.js", "renderer/**/*", "assets/icon.svg", "build/icon.ico", "package.json"],
-    "win": { "target": [{ "target": "portable", "arch": ["x64"] }], "icon": "build/icon.ico" },
-    "portable": { "artifactName": "Vesper-${version}-portable.exe" }
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "main/local/**/*",
+      "renderer/**/*",
+      "assets/icon.svg",
+      "assets/models.json",
+      "build/icon.ico",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "portable": {
+      "artifactName": "Vesper-${version}-portable.exe"
+    }
   }
 }

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "qwen25-3b",
+    "name": "Qwen 2.5 3B",
+    "ollamaTag": "qwen2.5:3b",
+    "params": "3B",
+    "recommendedVram": "4GB",
+    "recommendedRam": "8GB",
+    "sizeGb": 1.9
+  },
+  {
+    "id": "qwen25-7b",
+    "name": "Qwen 2.5 7B",
+    "ollamaTag": "qwen2.5:7b",
+    "params": "7B",
+    "recommendedVram": "8GB",
+    "recommendedRam": "16GB",
+    "sizeGb": 4.7
+  },
+  {
+    "id": "qwen25-14b",
+    "name": "Qwen 2.5 14B",
+    "ollamaTag": "qwen2.5:14b",
+    "params": "14B",
+    "recommendedVram": "12GB",
+    "recommendedRam": "32GB",
+    "sizeGb": 9.0
+  },
+  {
+    "id": "llama3-8b",
+    "name": "Llama 3 8B",
+    "ollamaTag": "llama3:8b",
+    "params": "8B",
+    "recommendedVram": "8GB",
+    "recommendedRam": "16GB",
+    "sizeGb": 4.7
+  }
+]

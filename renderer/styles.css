@@ -103,3 +103,54 @@ button{transition:none}
 /* 辅助文字保持完整不透明度，避免合成后降低实际阅读对比度。 */
 .section-label span,.new-chat kbd,.composer-caption{opacity:1}
 .composer textarea::placeholder{opacity:1}
+
+/* 本地部署面板复用现有配色变量，和主题在同一帧切换。 */
+.topbar-actions{display:flex;gap:6px;align-items:center;flex-shrink:0}
+.topbar .title-group{flex:1}
+.topbar h1{min-width:0;max-width:240px}
+.local-entry{border:1px solid var(--border)}
+.local-entry[aria-pressed="true"],.badge.local{background:var(--accent-soft);color:var(--accent)}
+.badge.local{border:1px solid var(--accent)}
+.side-mode.local{background:var(--bg-panel);border:2px solid var(--accent);width:9px;height:9px}
+.mode-options{flex-wrap:wrap}
+.mode-options>.local-option{flex-basis:100%}
+.local-settings-link{color:var(--accent);padding-left:0;margin-top:8px}
+.local-panel{width:640px;max-width:94vw}
+.local-body{flex:1;min-height:0;overflow:auto;padding:22px 28px 30px;scrollbar-gutter:stable}
+.local-notice{border:1px solid var(--border);background:var(--accent-soft);padding:12px 14px;border-radius:10px;font-size:12px;margin:0 0 22px;color:var(--text-primary)}
+.local-section{margin:0 0 25px}
+.local-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.local-section h3{font-size:14px;font-weight:600;margin:0}
+.local-help{font-size:11px;line-height:1.8;color:var(--text-secondary);margin:8px 0;overflow-wrap:anywhere}
+.hardware-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+.hardware-grid>div{background:var(--bg-elevated);border:1px solid var(--border);padding:12px;border-radius:10px}
+.hardware-grid dt{font-size:11px;color:var(--text-secondary)}
+.hardware-grid dd{margin:5px 0 0;font-size:15px;color:var(--text-primary);overflow-wrap:anywhere}
+.local-warnings{padding-left:18px;font-size:11px;color:var(--text-secondary);line-height:1.8}
+.local-warning{color:var(--danger);background:var(--bg-app);padding:4px 7px;border-radius:4px}
+.hardware-diagnostics{margin:12px 0;font-size:11px;color:var(--text-secondary)}
+.hardware-diagnostics summary{cursor:pointer;border-radius:4px;width:fit-content}
+.hardware-diagnostics ul{padding-left:18px}
+.local-path{font-size:12px;background:var(--bg-elevated);border:1px solid var(--border);padding:11px 12px;border-radius:8px;overflow-wrap:anywhere}
+.local-models{display:grid;gap:12px;margin-top:14px}
+.local-model-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:16px}
+.local-model-card h4{font-size:14px;font-weight:600;margin:0}
+.local-model-tag{display:inline-block;font:11px/1.6 Consolas,monospace;color:var(--text-secondary);background:var(--bg-code);padding:3px 7px;border-radius:5px;margin-top:8px;overflow-wrap:anywhere}
+.local-model-spec,.local-model-assessment{font-size:11px;line-height:1.8;margin:9px 0;color:var(--text-secondary)}
+.local-model-assessment.local-warning{color:var(--danger)}
+.local-model-actions{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px}
+.local-model-actions .primary-button{padding:8px 12px;font-size:11px}
+.local-panel button:disabled{cursor:not-allowed}
+.local-body .local-section:last-of-type{margin-bottom:0}
+.local-panel .local-section-heading>.badge{flex-shrink:0}
+.local-service-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.local-context-menu{position:fixed;z-index:25;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:5px;box-shadow:0 8px 30px var(--shadow-color)}
+.local-context-menu button{font-size:12px;padding:8px 14px;border-radius:5px}
+.model-progress{display:block;width:100%;height:7px;border:none;accent-color:var(--accent);margin-top:12px}
+.model-progress::-webkit-progress-bar{background:var(--border);border-radius:5px}
+.model-progress::-webkit-progress-value{background:var(--accent);border-radius:5px}
+.local-danger-dialog h2{color:var(--danger)}
+.local-danger-dialog p{white-space:pre-line}
+.model-error{font-size:11px;overflow-wrap:anywhere}
+@media(max-width:950px){.topbar h1{max-width:150px}.topbar .title-group{gap:8px}.topbar-actions{gap:3px}.local-entry{padding:7px 8px}}
+@media(max-width:540px){.local-body{padding:18px}.hardware-grid{gap:6px}.hardware-grid>div{padding:9px}.local-model-card .local-section-heading{align-items:flex-start;flex-direction:column;gap:0}}

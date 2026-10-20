@@ -3,9 +3,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { randomUUID } = require('node:crypto');
 const { setTimeout: delay } = require('node:timers/promises');
+const { createLocalMode, registerLocalIPC } = require('./main/local/ipc.cjs');
 
 const defaults = { mode: 'simulation', baseURL: 'https://api.openai.com/v1', model: 'gpt-4o-mini', temperature: 0.7, systemPrompt: '你是一个简洁友好的中文助手', theme: 'system', collapsed: false };
-let settings, database, windowState, win, active = null, testController = null;
+let settings, database, windowState, win, localMode, active = null, testController = null;
 let recoveryNotice = '';
 const dataFile = name => path.join(app.getPath('userData'), `${name}.json`);
 
@@ -39,6 +40,12 @@ function initStorage() {
   if (!database.chats.length) createChat();
   if (!database.chats.some(c => c.id === database.currentId)) database.currentId = database.chats[0].id;
   windowState = readJSON('window', {});
+  localMode = createLocalMode({ readJSON, writeJSON, installerOptions: { cacheDir: path.join(app.getPath('userData'), 'runtime-cache') }, emit: (value, progress) => {
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('local:state-changed', value);
+      if (progress) win.webContents.send('local:download-progress', { ...progress, revision: value.revision });
+    }
+  } });
 }
 
 function keyPlain() {
@@ -70,7 +77,7 @@ function validateSettings(input) {
   if (!input || typeof input !== 'object') throw new Error('设置格式不正确。');
   const next = { ...settings };
   if (input.mode !== undefined) {
-    if (!['simulation', 'online'].includes(input.mode)) throw new Error('请选择有效模式。');
+    if (!['simulation', 'online', 'local'].includes(input.mode)) throw new Error('请选择有效模式。');
     next.mode = input.mode;
   }
   if (input.baseURL !== undefined) {
@@ -362,10 +369,14 @@ async function generate(run, chat, response, config) {
         await delay(15 + Math.floor(Math.random() * 31), null, { signal: run.controller.signal });
         update(char);
       }
-    } else {
+    } else if (config.mode === 'online') {
       let received = false;
       await online(config, history, run.controller, text => { received = true; update(text); });
       if (!received) throw new Error('接口返回了空回复，请检查模型是否支持文本对话。');
+    } else if (config.mode === 'local') {
+      await localMode.chat(config, chat.messages.filter(m => m.id !== response.id), run.controller, update);
+    } else {
+      throw new Error('当前对话模式无效，请重新选择。');
     }
     response.status = run.controller.signal.aborted ? 'stopped' : 'done';
   } catch (e) {
@@ -377,6 +388,7 @@ async function generate(run, chat, response, config) {
     try { saveChats(); } catch { response.error = '对话保存失败，请检查磁盘空间和目录权限。'; response.status = 'error'; }
     if (active === run) active = null;
     emit({ requestId: run.id, chatId: chat.id, messageId: response.id, type: 'end', message: response });
+    run.finish?.();
   }
 }
 
@@ -386,6 +398,16 @@ function registerIPC() {
     try { return { ok: true, value: await fn(value) }; } catch (e) { return { ok: false, error: humanError(e) }; }
   });
   handle('state:load', state);
+  const stopLocalChat = async modelId => {
+    if (active?.mode === 'local' && (!modelId || active.modelId === modelId)) { const run = active; run.controller.abort(); await run.finished; }
+  };
+  registerLocalIPC(handle, () => localMode, {
+    stopChat: stopLocalChat,
+    chooseDirectory: async () => {
+      const result = await dialog.showOpenDialog(win, { title: '选择 Ollama 模型存储目录', defaultPath: localMode.snapshot().config.modelDirectory || app.getPath('home'), properties: ['openDirectory', 'createDirectory'] });
+      return result.canceled ? null : result.filePaths[0];
+    }
+  });
   handle('settings:save', input => {
     const next = validateSettings(input);
     if (typeof input.apiKey === 'string' && input.apiKey.trim()) {
@@ -398,6 +420,7 @@ function registerIPC() {
   });
   handle('settings:reveal', keyPlain);
   handle('connection:test', async input => {
+    if (input?.mode === 'local' || (input?.mode === undefined && settings.mode === 'local')) throw new Error('请在本地部署面板检测 Ollama；此按钮不会为本地模式调用在线接口。');
     if (testController) throw new Error('连接测试正在进行。');
     const config = prepareConnection(input), controller = new AbortController();
     testController = controller;
@@ -427,14 +450,15 @@ function registerIPC() {
     if (active) throw new Error('另一条回复正在生成，请先停止。');
     if (typeof content !== 'string' || !content.trim() || content.length > 32000) throw new Error('请输入 1–32000 字的消息。');
     if (typeof requestId !== 'string' || requestId.length > 100) throw new Error('请求标识无效。');
-    const config = settings.mode === 'online' ? prepareConnection() : { ...settings };
+    const config = settings.mode === 'online' ? prepareConnection() : settings.mode === 'local' ? { mode: 'local', temperature: settings.temperature, systemPrompt: settings.systemPrompt, ...localMode.prepareChat() } : { ...settings };
     const chat = findChat(chatId);
     const user = { id: randomUUID(), role: 'user', content: content.trim(), createdAt: Date.now() };
-    const response = { id: randomUUID(), role: 'assistant', mode: config.mode, content: '', status: 'streaming', createdAt: Date.now() };
+    const response = { id: randomUUID(), role: 'assistant', mode: config.mode, modelName: config.localModelName || '', content: '', status: 'streaming', createdAt: Date.now() };
     chat.messages.push(user, response);
     if (chat.messages.length === 2 && chat.title === '新的对话') chat.title = content.trim().replace(/\s+/g, ' ').slice(0, 22);
     chat.updatedAt = Date.now(); saveChats();
-    const run = { id: requestId, chatId, controller: new AbortController() }; active = run;
+    const run = { id: requestId, chatId, mode: config.mode, modelId: config.localModelId, controller: new AbortController() };
+    run.finished = new Promise(resolve => { run.finish = resolve; }); active = run;
     // 先把消息对象返回页面，再开始推送，避免首段流丢失。
     setTimeout(() => generate(run, chat, response, config), 40);
     return { user, response, title: chat.title };
@@ -469,7 +493,9 @@ function createWindow() {
   ipcMain.on('theme:ready', show);
   created.once('closed', () => ipcMain.removeListener('theme:ready', show));
   win.on('close', () => {
+    localMode.installer.cancel();
     active?.controller.abort(); testController?.abort();
+    localMode.manager.pauseAll().catch(() => {});
     if (active) { for (const m of findChat(active.chatId).messages) if (m.status === 'streaming') m.status = 'stopped'; }
     try { writeJSON('window', { bounds: win.getNormalBounds(), maximized: win.isMaximized() }); saveChats(); } catch {}
   });
@@ -486,6 +512,14 @@ async function bootstrap() {
   app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.show(); win.focus(); } });
   await app.whenReady();
   initStorage(); registerIPC(); createWindow();
+  let quitting = false;
+  app.on('before-quit', event => {
+    if (quitting || (!localMode.service.owned() && !localMode.installer.snapshot().busy)) return;
+    event.preventDefault(); quitting = true;
+    active?.controller.abort();
+    // 下载阶段可以取消；安装器已启动后等待结束，不强杀安装进程。
+    Promise.all([localMode.manager.pauseAll(), localMode.installer.shutdown()]).then(() => localMode.service.stop()).catch(() => {}).finally(() => app.quit());
+  });
   app.on('activate', () => { if (!BrowserWindow.getAllWindows().length) createWindow(); });
   app.on('window-all-closed', () => app.quit());
 }

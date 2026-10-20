@@ -14,6 +14,30 @@ contextBridge.exposeInMainWorld('vesper', {
   send: value => ipcRenderer.invoke('chat:send', value),
   stop: id => ipcRenderer.invoke('chat:stop', id),
   copy: value => ipcRenderer.invoke('clipboard:write', value),
+  local: {
+    state: () => ipcRenderer.invoke('local:state'),
+    detectHardware: value => ipcRenderer.invoke('local:hardware', value),
+    connect: () => ipcRenderer.invoke('local:ensure-service'),
+    refresh: () => ipcRenderer.invoke('local:refresh'),
+    chooseDirectory: () => ipcRenderer.invoke('local:choose-directory'),
+    applyDirectory: () => ipcRenderer.invoke('local:apply-directory'),
+    download: value => ipcRenderer.invoke('local:download', value),
+    pause: id => ipcRenderer.invoke('local:pause', id),
+    remove: id => ipcRenderer.invoke('local:delete', id),
+    selectModel: id => ipcRenderer.invoke('local:select-model', id),
+    installRuntime: () => ipcRenderer.invoke('local:install-runtime'),
+    cancelInstall: () => ipcRenderer.invoke('local:cancel-install'),
+    onDownloadProgress: callback => {
+      const listener = (_event, value) => callback(value);
+      ipcRenderer.on('local:download-progress', listener);
+      return () => ipcRenderer.removeListener('local:download-progress', listener);
+    },
+    onStateChanged: callback => {
+      const listener = (_event, value) => callback(value);
+      ipcRenderer.on('local:state-changed', listener);
+      return () => ipcRenderer.removeListener('local:state-changed', listener);
+    }
+  },
   onStream: callback => {
     const listener = (_event, data) => callback(data);
     ipcRenderer.on('chat:stream', listener);

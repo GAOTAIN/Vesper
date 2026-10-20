@@ -2,6 +2,7 @@
 const $ = id => document.getElementById(id);
 const api = window.vesper;
 let data, busy = null, followBottom = true, toastTimer, previousFocus, dialogAction, renderFrame;
+let localState = null;
 const drafts = new Map();
 const md = window.markdownit({ html: false, linkify: true, breaks: true });
 const escape = text => md.utils.escapeHtml(String(text));
@@ -39,16 +40,21 @@ function currentChat() { return data.database.chats.find(c => c.id === data.data
 function setData(value) { data = value; busy = value.busy; applyTheme(data.settings.theme); render(); }
 function renderMode() {
   const online = data.settings.mode === 'online';
-  $('modeBadge').textContent = online ? '在线模式' : '模拟模式';
+  const local = data.settings.mode === 'local';
+  $('modeBadge').textContent = local ? '本地部署模式' : online ? '在线模式' : '模拟模式';
   $('modeBadge').classList.toggle('online', online);
-  $('modeBadge').title = online ? `接口：${data.settings.baseURL}\n模型：${data.settings.model}` : '本地规则与模板生成，无需网络';
-  $('sideMode').classList.toggle('online', online); $('sideMode').title = online ? '在线模式' : '模拟模式';
-  $('composerMode').textContent = online ? `在线连接 · ${data.settings.model}` : '本地灵感，随时开始';
+  $('modeBadge').classList.toggle('local', local);
+  const localModel = localState?.catalog.find(model => model.id === localState.config.selectedModelId);
+  $('modeBadge').title = local ? `本机 Ollama · ${localModel?.name || '请先部署并选择模型'}` : online ? `接口：${data.settings.baseURL}\n模型：${data.settings.model}` : '本地规则与模板生成，无需网络';
+  $('sideMode').classList.toggle('online', online); $('sideMode').classList.toggle('local', local); $('sideMode').title = local ? '本地部署模式' : online ? '在线模式' : '模拟模式';
+  $('localOpen').setAttribute('aria-pressed', String(local));
+  $('composerMode').textContent = local ? `本地推理 · ${localModel?.name || '请先部署并选择模型'}` : online ? `在线连接 · ${data.settings.model}` : '本地灵感，随时开始';
   $('emptyMode').replaceChildren();
   const dot = document.createElement('span'); dot.className = 'small-dot';
-  $('emptyMode').append(dot, document.createTextNode(online ? `在线模式 · ${data.settings.model}` : '模拟模式已就绪 · 无需网络或密钥'));
-  $('disclaimer').textContent = online ? '模型回复可能有误，请核实重要信息' : '模拟回复由本地模板生成，请勿作为事实依据';
+  $('emptyMode').append(dot, document.createTextNode(local ? `本地部署 · ${localModel?.name || '请先下载并选择模型'}` : online ? `在线模式 · ${data.settings.model}` : '模拟模式已就绪 · 无需网络或密钥'));
+  $('disclaimer').textContent = local ? '本地推理使用本机算力，不使用在线接口与密钥' : online ? '模型回复可能有误，请核实重要信息' : '模拟回复由本地模板生成，请勿作为事实依据';
   $('shell').classList.toggle('collapsed', data.settings.collapsed); $('expand').hidden = !data.settings.collapsed;
+  syncComposer();
 }
 function renderList() {
   $('chatList').replaceChildren();
@@ -76,7 +82,7 @@ function messageNode(message) {
 }
 function updateMessage(node, message) {
   node.classList.toggle('streaming', message.status === 'streaming');
-  node.querySelector('.message-meta').textContent = message.mode === 'online' ? '在线模型' : '本地模拟';
+  node.querySelector('.message-meta').textContent = message.mode === 'local' ? `本地模型${message.modelName ? ' · ' + message.modelName : ''}` : message.mode === 'online' ? '在线模型' : '本地模拟';
   const body = node.querySelector('.markdown');
   if (!message.content && message.status === 'streaming') body.innerHTML = '<div class="thinking">思考中<span></span><span></span><span></span></div>';
   else body.innerHTML = message.content ? md.render(message.content) : '<p>尚未生成内容。</p>';
@@ -98,7 +104,9 @@ function syncComposer() {
   $('sendButton').textContent = busy ? '■ 停止' : '↑';
   $('sendButton').setAttribute('aria-label', busy ? '停止生成' : '发送消息');
   $('sendButton').classList.toggle('stopping', Boolean(busy));
-  $('sendButton').disabled = !busy && !$('messageInput').value.trim();
+  const localUnavailable = data?.settings.mode === 'local' && (!localState?.features.chat || !localState?.config.selectedModelId || Boolean(localState?.config.pendingModelDirectory));
+  $('sendButton').disabled = !busy && (localUnavailable || !$('messageInput').value.trim());
+  $('sendButton').title = localUnavailable && !busy ? '请先在本地部署面板完成模型部署与选择' : '';
 }
 function scrollBottom() {
   if (followBottom) requestAnimationFrame(() => { $('chatScroll').scrollTop = $('chatScroll').scrollHeight; });
@@ -119,6 +127,7 @@ async function newChat() {
 async function sendMessage(event) {
   event?.preventDefault();
   if (busy) { try { await call(api.stop(busy.requestId)); } catch(e) { toast(e.message); } return; }
+  if (data.settings.mode === 'local' && (!localState?.config.selectedModelId || localState?.config.pendingModelDirectory)) { toast('请先在本地部署面板完成模型部署与选择。'); return; }
   const content = $('messageInput').value.trim(); if (!content) return;
   const chat = currentChat(), requestId = crypto.randomUUID();
   busy = { chatId: chat.id, requestId }; syncComposer();
@@ -168,11 +177,19 @@ function openSettings() {
   $('apiKey').placeholder = s.hasKey ? `已保存 · ••••${s.keyLast4}` : '填写你的 API Key（本地 Ollama 可留空）';
   $('keyHint').textContent = s.hasKey ? `已保存 · 尾号 ${s.keyLast4 || '未知'}` : '未保存';
   $('connectionResult').textContent = s.keyError || ''; $('connectionResult').className = 'connection-result' + (s.keyError ? ' error' : '');
+  syncSettingsMode();
   $('settingsOverlay').hidden = false; $('settingsPanel').focus();
 }
 function closeSettings() { $('settingsOverlay').hidden = true; $('apiKey').value = ''; $('apiKey').type = 'password'; applyTheme(data.settings.theme); previousFocus?.focus(); }
 $('settingsOpen').onclick = openSettings; $('settingsClose').onclick = closeSettings;
 $('settingsOverlay').onclick = event => { if (event.target === $('settingsOverlay')) closeSettings(); };
+function syncSettingsMode() {
+  const local = document.querySelector('input[name=mode]:checked')?.value === 'local';
+  $('localSettingsNote').hidden = !local;
+  $('testConnection').disabled = local;
+  $('testConnection').title = local ? '请在本地部署面板检测 Ollama 服务' : '';
+}
+for (const radio of document.querySelectorAll('input[name=mode]')) radio.addEventListener('change', syncSettingsMode);
 $('showKey').onclick = async () => {
   try {
     if ($('apiKey').type === 'password') {
@@ -226,6 +243,7 @@ $('messages').onclick = async event => {
   if (link) { event.preventDefault(); try { await call(api.copy(link.href)); toast('链接已复制，可在浏览器中打开。'); } catch(e) { toast(e.message); } }
 };
 document.addEventListener('keydown', e => {
+  if (!$('localOverlay').hidden) return;
   if (!$('settingsOverlay').hidden) {
     if (e.key === 'Escape') closeSettings();
     if (e.key === 'Tab') {
@@ -238,4 +256,11 @@ document.addEventListener('keydown', e => {
   }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') { e.preventDefault(); newChat(); }
 });
-(async () => { try { setData(await call(api.load())); await Promise.all([...document.querySelectorAll('link[rel=stylesheet]')].map(link => link.sheet ? Promise.resolve() : new Promise(resolve => { link.onload = resolve; link.onerror = resolve; }))); api.themeReady(); if (data.recoveryNotice) toast(data.recoveryNotice); $('messageInput').focus(); } catch(e) { api.themeReady(); toast(`启动失败：${e.message}`); } })();
+const localPanel = new window.VesperLocalPanel({
+  api: api.local, call, toast,
+  setMode: async mode => { data.settings = await call(api.saveSettings({ mode })); renderMode(); },
+  onState: value => { localState = value; if (data) renderMode(); }
+});
+$('localOpen').onclick = () => localPanel.open();
+$('settingsLocalOpen').onclick = () => { closeSettings(); localPanel.open(); };
+(async () => { try { setData(await call(api.load())); if (data.settings.mode === 'local') await localPanel.load(); await Promise.all([...document.querySelectorAll('link[rel=stylesheet]')].map(link => link.sheet ? Promise.resolve() : new Promise(resolve => { link.onload = resolve; link.onerror = resolve; }))); api.themeReady(); if (data.recoveryNotice) toast(data.recoveryNotice); $('messageInput').focus(); } catch(e) { api.themeReady(); toast(`启动失败：${e.message}`); } })();

@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const root = path.resolve(__dirname, '..');
 const files = ['main.js', 'preload.js', 'package.json', 'package-lock.json', 'assets/icon.svg'];
 function walk(dir) { for(const item of fs.readdirSync(path.join(root,dir),{withFileTypes:true})) { const name=dir+'/'+item.name; if(item.isDirectory()) walk(name); else if(/\.(?:css|js|html|cjs)$/.test(name)) files.push(name); } }
-walk('renderer'); walk('scripts');
+walk('renderer'); walk('scripts'); walk('main');
 const css = fs.readFileSync(path.join(root,'renderer/styles.css'),'utf8');
 const blocks = [...css.matchAll(/(?:^:root|^\[data-theme="dark"\])\s*\{([^}]+)\}/gm)];
 assert.equal(blocks.length,2);
@@ -30,6 +30,7 @@ for(const [theme,vars] of Object.entries({dark,light})) {
     for(const text of ['text-primary','text-secondary']) values[text+'/'+background]=contrast(resolve(vars,text),resolve(vars,background));
   }
   for(const background of ['accent-solid','accent-solid-hover']) values['on-accent/'+background]=contrast(resolve(vars,'on-accent'),resolve(vars,background));
+  values['danger/bg-app']=contrast(resolve(vars,'danger'),resolve(vars,'bg-app'));
   for(const [name,value] of Object.entries(values)) assert(value>=4.5,theme+' '+name+' '+value);
   contrasts[theme]=values;
 }
