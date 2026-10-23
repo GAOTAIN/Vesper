@@ -1,12 +1,12 @@
-# Vesper 1.3.2
+# Vesper 1.3.3
 
-[下载最新 Windows EXE](https://github.com/GGAAOOTTIIAANN/Vesper/releases/latest) · [GitHub 源码仓库](https://github.com/GGAAOOTTIIAANN/Vesper)
+[下载最新 Windows EXE](https://github.com/VyskoyeNebo/Vesper/releases/latest) · [GitHub 源码仓库](https://github.com/VyskoyeNebo/Vesper)
 
 Windows 桌面聊天客户端。支持离线模拟、在线模型和基于 Ollama 的真实本地部署三种模式。点击「本地部署 → 本地安装 Ollama」可自动下载、校验并安装运行库，再选择模型下载使用。界面、头像、Markdown 和代码高亮均为本地资源，不使用 CDN。
 
 ## 直接运行
 
-从 [v1.3.2 发布页](https://github.com/GGAAOOTTIIAANN/Vesper/releases/tag/v1.3.2) 下载 `Vesper-1.3.2-portable.exe`，双击即可运行；本地构建位于 `dist`。历史版本见 [GitHub 发布页](https://github.com/GGAAOOTTIIAANN/Vesper/releases)。这是 Windows x64 免安装单文件，目标电脑无需 Node.js。便携程序启动时会将 Electron 运行文件解压到系统临时目录；首次打开可能稍慢，关闭后由启动器清理。持久数据保存在当前 Windows 账户的用户数据目录，不保存在 EXE 旁边。
+从 [v1.3.3 发布页](https://github.com/VyskoyeNebo/Vesper/releases/tag/v1.3.3) 下载 `Vesper-1.3.3-portable.exe`，双击即可运行；本地构建位于 `dist`。历史版本见 [GitHub 发布页](https://github.com/VyskoyeNebo/Vesper/releases)。这是 Windows x64 免安装单文件，目标电脑无需 Node.js。便携程序启动时会将 Electron 运行文件解压到系统临时目录；首次打开可能稍慢，关闭后由启动器清理。持久数据保存在当前 Windows 账户的用户数据目录，不保存在 EXE 旁边。
 
 首次运行可能被 Windows Defender 或 SmartScreen 提示拦截，这是未签名程序可能出现的提示。确认文件来自你信任的本项目构建后，选择「更多信息 → 仍要运行」。本项目没有购买或嵌入代码签名证书。
 
@@ -74,7 +74,7 @@ npm.cmd install
 npm.cmd run dist
 ```
 
-产物：`E:\模拟AI\dist\Vesper-1.3.2-portable.exe`。`dist\win-unpacked` 是构建中间目录，分享时只需发送 portable EXE。打包配置为 `appId: com.vesper.app`、`productName: Vesper`、Windows x64 `portable`，图标为 `build/icon.ico`。
+产物：`E:\模拟AI\dist\Vesper-1.3.3-portable.exe`。`dist\win-unpacked` 是构建中间目录，分享时只需发送 portable EXE。打包配置为 `appId: com.vesper.app`、`productName: Vesper`、Windows x64 `portable`，图标为 `build/icon.ico`。
 
 `npm run icons` 从手写 `assets/icon.svg` 用 sharp 生成 256×256 的 `build/icon.png` 和含 16/32/48/64/128/256 像素 PNG 的 `build/icon.ico`。`npm install` 的 postinstall 使用 esbuild 把本地 markdown-it、highlight.js 合并成 `renderer/vendor.js`，没有引入前端框架。运行时没有 native npm 模块，所以禁用了多余的 native rebuild。
 
@@ -317,3 +317,9 @@ Crystal／CrystalCoder 的上游模型使用自定义 Transformers 架构，尚�
 - 对外部托盘 Ollama 不强制结束进程。设置显示「待生效」，退出系统托盘 Ollama 后点击「应用目录并重启」。新目录生效前阻止开始新下载，避免写入旧位置。
 - 已有模型文件不会自动迁移或删除。切回原目录可重新使用该目录的模型及未完成的下载记录。
 - `npm.cmd run test:directory` 使用独立用户目录，受控替代文件夹对话框、用户环境变量写入和 Ollama 进程；验证 IPC、路径传参、暂停续传、外部服务拦截、错误处理、语言和持久化。结果位于 `work/directory-results.json`，不向日常模型目录写入测试数据。
+
+## 1.3.3：修复下载位置保存失败（2026-10-23）
+
+修复更改目录时 Windows PowerShell 直接退出、界面仅显示 `Command failed` 的问题。移除与 `windowsHide` 重复的窗口样式启动参数，保持后台静默执行；路径仍通过独立环境参数传递，用户级 OLLAMA_MODELS 与 Ollama 重启逻辑保留。
+
+写入失败时显示可读原因（权限、超时、缺少 PowerShell 或异常退出），配置保留原目录。`npm.cmd run test:directory-environment` 会使用独立的随机测试变量，实际运行 Windows PowerShell 写入、读回并清理中文和特殊字符路径，同时确认真实 OLLAMA_MODELS 未改变；不会修改日常模型位置或启动 Ollama。

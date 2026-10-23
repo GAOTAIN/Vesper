@@ -1,6 +1,6 @@
 {
   "name": "vesper",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "description": "Vesper · 离线模拟、在线模型与本地部署聊天客户端",
   "main": "main.js",
   "author": "Vesper",
@@ -21,7 +21,8 @@
     "test:installer-network": "node scripts/installer-network-probe.cjs",
     "test:catalog-sources": "node scripts/catalog-source-test.cjs",
     "test:language": "node scripts/run.cjs language-test",
-    "test:directory": "node scripts/run.cjs directory-test"
+    "test:directory": "node scripts/run.cjs directory-test",
+    "test:directory-environment": "node scripts/directory-environment-test.cjs"
   },
   "dependencies": {
     "highlight.js": "11.12.0",

@@ -39,6 +39,21 @@ function portIsListening() {
   });
 }
 
+async function saveModelsEnvironment(target, runFile = executeFile) {
+  // Electron 已用 windowsHide 隐藏进程；额外的窗口样式参数会使部分 Windows PowerShell 直接退出。
+  const script = '$ErrorActionPreference="Stop"; [Console]::OutputEncoding=[System.Text.UTF8Encoding]::new(); try { [Environment]::SetEnvironmentVariable("OLLAMA_MODELS", $env:VESPER_MODELS_TARGET, "User") } catch { [Console]::Error.Write($_.Exception.Message); exit 1 }';
+  try {
+    await runFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], {
+      windowsHide: true, timeout: 10000, encoding: 'utf8', env: { ...process.env, VESPER_MODELS_TARGET: target }
+    });
+  } catch (error) {
+    if (error.code === 'ENOENT') throw new Error('无法保存模型下载位置：未找到 Windows PowerShell。原下载位置保持不变。');
+    if (error.killed || error.code === 'ETIMEDOUT') throw new Error('保存模型下载位置超时，请稍后重试。原下载位置保持不变。');
+    const detail = String(error.stderr || (!String(error.message || '').startsWith('Command failed:') ? error.message : '') || '').trim().slice(0, 220);
+    throw new Error(detail ? '无法保存模型下载位置：' + detail + '。原下载位置保持不变。' : '无法保存模型下载位置：Windows 环境变量写入进程异常退出，请重试。原下载位置保持不变。');
+  }
+}
+
 function createOllamaService({ client, store, emit, findExecutable = findOllama, launch = spawn, runFile = executeFile, platform = process.platform, startupMs = 20000, isPortBusy = portIsListening }) {
   let child = null, pending = null, closing = false;
   let state = { status: 'idle', owner: null, activeDirectory: null, error: '', executable: null };
@@ -138,9 +153,7 @@ function createOllamaService({ client, store, emit, findExecutable = findOllama,
     try { fs.writeFileSync(probe, ''); } catch { throw new Error('所选模型目录不可写，请更换目录或检查权限。'); }
     finally { try { fs.unlinkSync(probe); } catch {} }
     if (platform === 'win32') {
-      await runFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-Command', '[Environment]::SetEnvironmentVariable("OLLAMA_MODELS", $env:VESPER_MODELS_TARGET, "User")'], {
-        windowsHide: true, timeout: 10000, env: { ...process.env, VESPER_MODELS_TARGET: target }
-      });
+      await saveModelsEnvironment(target, runFile);
     }
     process.env.OLLAMA_MODELS = target;
     store.update({ pendingModelDirectory: target });
@@ -158,4 +171,4 @@ function createOllamaService({ client, store, emit, findExecutable = findOllama,
   return { ensure, inspect, ping, stop, applyDirectory, owned, snapshot: () => ({ ...state }) };
 }
 
-module.exports = { createOllamaService, findOllama, waitFor };
+module.exports = { createOllamaService, findOllama, waitFor, saveModelsEnvironment };

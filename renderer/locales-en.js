@@ -317,5 +317,9 @@ window.VesperEnglish = {
   "已连接外部 Ollama，无法确认它的实际下载目录。更改位置后需退出外部服务并应用。": "Connected to external Ollama; its actual download directory is unknown. After choosing a location, quit the external service and apply the change.",
   "此位置已生效，后续下载的模型保存在这里。": "This location is active. Future model downloads are saved here.",
   "此位置将在 Vesper 下次启动 Ollama 时用于模型下载。": "Vesper will use this model download location the next time it starts Ollama.",
-  "目录已保存但尚未生效。请退出托盘 Ollama，再点击“应用目录并重启”。": "The directory is saved but not active. Quit Ollama from the system tray, then click Apply directory and restart."
+  "目录已保存但尚未生效。请退出托盘 Ollama，再点击“应用目录并重启”。": "The directory is saved but not active. Quit Ollama from the system tray, then click Apply directory and restart.",
+  "无法保存模型下载位置：未找到 Windows PowerShell。原下载位置保持不变。": "Cannot save the model download location: Windows PowerShell was not found. The previous location is unchanged.",
+  "保存模型下载位置超时，请稍后重试。原下载位置保持不变。": "Saving the model download location timed out. Please retry. The previous location is unchanged.",
+  "无法保存模型下载位置：{0}。原下载位置保持不变。": "Cannot save the model download location: {0}. The previous location is unchanged.",
+  "无法保存模型下载位置：Windows 环境变量写入进程异常退出，请重试。原下载位置保持不变。": "Cannot save the model download location: the Windows environment writer exited unexpectedly. Please retry. The previous location is unchanged."
 };
