@@ -306,5 +306,16 @@ window.VesperEnglish = {
   "推荐显存 {0}": "Recommended VRAM {0}",
   "网络超时：请求超过 60 秒，请检查网络或稍后重试。": "Network timeout after 60 seconds. Check your connection or retry later.",
   "Windows 本机密钥加密不可用，无法解密 API Key。": "Windows local encryption is unavailable. The API key cannot be decrypted.",
-  "API Key 无法在当前 Windows 账户解密，请重新填写。": "The API key cannot be decrypted by this Windows account. Enter it again."
+  "API Key 无法在当前 Windows 账户解密，请重新填写。": "The API key cannot be decrypted by this Windows account. Enter it again.",
+  "模型下载位置": "Model download location",
+  "更改下载位置": "Change download location",
+  "选择后立即保存，仅影响本地 Ollama 模型。更改位置会暂停下载和本地回复；已有模型文件不会自动移动。": "Saved immediately for local Ollama models only. Changing locations pauses downloads and local replies. Existing model files are not moved automatically.",
+  "正在更改位置…": "Changing location…",
+  "正在读取下载位置…": "Reading download location…",
+  "正在应用下载位置，请稍候…": "Applying download location. Please wait…",
+  "下载位置待生效：请先退出系统托盘中的 Ollama，再点击“应用目录并重启”。生效前暂停新下载。": "Download location pending: quit Ollama from the system tray, then click Apply directory and restart. New downloads are blocked until it takes effect.",
+  "已连接外部 Ollama，无法确认它的实际下载目录。更改位置后需退出外部服务并应用。": "Connected to external Ollama; its actual download directory is unknown. After choosing a location, quit the external service and apply the change.",
+  "此位置已生效，后续下载的模型保存在这里。": "This location is active. Future model downloads are saved here.",
+  "此位置将在 Vesper 下次启动 Ollama 时用于模型下载。": "Vesper will use this model download location the next time it starts Ollama.",
+  "目录已保存但尚未生效。请退出托盘 Ollama，再点击“应用目录并重启”。": "The directory is saved but not active. Quit Ollama from the system tray, then click Apply directory and restart."
 };

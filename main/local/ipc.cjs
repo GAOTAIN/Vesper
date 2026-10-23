@@ -1,3 +1,5 @@
+const path = require('node:path');
+const os = require('node:os');
 const { loadCatalog } = require('./catalog.cjs');
 const { createHardwareDetector } = require('./hardware.cjs');
 const { createLocalStore } = require('./local-store.cjs');
@@ -25,6 +27,7 @@ function createLocalMode({ readJSON, writeJSON, emit, client = createOllamaClien
     return {
       revision, catalog: models.models,
       config: store.snapshot(), hardware, service: service.snapshot(), installer: installer.snapshot(),
+      storage: { defaultDirectory: path.resolve(process.env.OLLAMA_MODELS || path.join(os.homedir(), '.ollama', 'models')) },
       ...models, features: { directory: true, service: true, downloads: true, chat: true, installation: true }
     };
   }

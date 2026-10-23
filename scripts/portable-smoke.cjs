@@ -110,6 +110,14 @@ async function until(task, ms = 30000) { const end = Date.now() + ms; while (Dat
   await until(() => js('!window.__portableBeforeReload && Boolean(window.vesper && document.querySelector(".chat-item")) && document.documentElement.lang === "en"'));
   assert.equal(await js('(async () => (await window.vesper.load()).value.settings.language)()'), 'en');
   await js('document.getElementById("settingsOpen").click();document.querySelector("label[for=language]").scrollIntoView({block:"center"});true');
+  await until(() => js('!document.getElementById("settingsChooseDirectory").disabled'));
+  assert.equal(await js('document.querySelector("label[for=settingsModelDirectory]").textContent'),'Model download location');
+  assert.equal(await js('document.getElementById("settingsChooseDirectory").textContent'),'Change download location');
+  assert.equal(await js('document.getElementById("settingsModelDirectory").readOnly'),true);
+  const directoryState = await js('(async () => (await window.vesper.local.state()).value)()');
+  assert.equal(await js('document.getElementById("settingsModelDirectory").value'),directoryState.config.pendingModelDirectory || directoryState.config.modelDirectory || directoryState.storage.defaultDirectory);
+  pass('实际 EXE 设置显示完整下载路径与更改入口，读取目录不会执行安装或修改目录');
+  await js('document.getElementById("settingsModelDirectory").scrollIntoView({block:"center"});true');
   await js('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
   const languageScreenshot = await command('Page.captureScreenshot', {format:'png'});
   fs.writeFileSync(path.join(root, 'work/portable-language-en.png'), Buffer.from(languageScreenshot.data,'base64'));

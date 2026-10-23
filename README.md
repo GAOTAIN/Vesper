@@ -1,4 +1,4 @@
-# Vesper 1.3.1
+# Vesper 1.3.2
 
 [下载最新 Windows EXE](https://github.com/GGAAOOTTIIAANN/Vesper/releases/latest) · [GitHub 源码仓库](https://github.com/GGAAOOTTIIAANN/Vesper)
 
@@ -6,7 +6,7 @@ Windows 桌面聊天客户端。支持离线模拟、在线模型和基于 Ollam
 
 ## 直接运行
 
-本次本地构建位于 `dist/Vesper-1.3.1-portable.exe`，双击即可运行。已发布版本可从 [GitHub 发布页](https://github.com/GGAAOOTTIIAANN/Vesper/releases) 下载。这是 Windows x64 免安装单文件，目标电脑无需 Node.js。便携程序启动时会将 Electron 运行文件解压到系统临时目录；首次打开可能稍慢，关闭后由启动器清理。持久数据保存在当前 Windows 账户的用户数据目录，不保存在 EXE 旁边。
+从 [v1.3.2 发布页](https://github.com/GGAAOOTTIIAANN/Vesper/releases/tag/v1.3.2) 下载 `Vesper-1.3.2-portable.exe`，双击即可运行；本地构建位于 `dist`。历史版本见 [GitHub 发布页](https://github.com/GGAAOOTTIIAANN/Vesper/releases)。这是 Windows x64 免安装单文件，目标电脑无需 Node.js。便携程序启动时会将 Electron 运行文件解压到系统临时目录；首次打开可能稍慢，关闭后由启动器清理。持久数据保存在当前 Windows 账户的用户数据目录，不保存在 EXE 旁边。
 
 首次运行可能被 Windows Defender 或 SmartScreen 提示拦截，这是未签名程序可能出现的提示。确认文件来自你信任的本项目构建后，选择「更多信息 → 仍要运行」。本项目没有购买或嵌入代码签名证书。
 
@@ -74,7 +74,7 @@ npm.cmd install
 npm.cmd run dist
 ```
 
-产物：`E:\模拟AI\dist\Vesper-1.3.1-portable.exe`。`dist\win-unpacked` 是构建中间目录，分享时只需发送 portable EXE。打包配置为 `appId: com.vesper.app`、`productName: Vesper`、Windows x64 `portable`，图标为 `build/icon.ico`。
+产物：`E:\模拟AI\dist\Vesper-1.3.2-portable.exe`。`dist\win-unpacked` 是构建中间目录，分享时只需发送 portable EXE。打包配置为 `appId: com.vesper.app`、`productName: Vesper`、Windows x64 `portable`，图标为 `build/icon.ico`。
 
 `npm run icons` 从手写 `assets/icon.svg` 用 sharp 生成 256×256 的 `build/icon.png` 和含 16/32/48/64/128/256 像素 PNG 的 `build/icon.ico`。`npm install` 的 postinstall 使用 esbuild 把本地 markdown-it、highlight.js 合并成 `renderer/vendor.js`，没有引入前端框架。运行时没有 native npm 模块，所以禁用了多余的 native rebuild。
 
@@ -307,3 +307,13 @@ Crystal／CrystalCoder 的上游模型使用自定义 Transformers 架构，尚�
 - 聊天界面、模式标识、设置、本地模型管理、下载进度、常见错误和代码复制文字随语言切换，模型权重、回复正文与提示词不被改写。
 - 英文文案全部为本地资源，没有翻译接口或新增依赖。原生文件夹选择窗口使用应用语言标题；Windows 系统控件仍由系统语言决定。
 - `npm.cmd run test:language` 使用独立用户目录和受控 Ollama 服务，检查往返切换、下载暂停续传、正文保护、错误提示、语言校验、重启持久化和最小窗口。结果写入 `work/language-results.json`。
+
+## 1.3.2：直接更改模型下载位置（2026-10-23）
+
+打开「设置与偏好 → 模型下载位置 → 更改下载位置」，使用 Windows 文件夹选择器选定目标目录。选择后立即保存，无需再点击「保存设置」，也不会切换当前聊天模式。此设置只针对本地 Ollama 模型权重，运行库安装位置和 Vesper 会话数据目录不受影响。
+
+- 显示当前选择的完整路径，可以选中文本复制。默认使用 OLLAMA_MODELS，未设置时使用当前账户的 `.ollama/models`。
+- 更改位置会暂停模型下载并中断当前本地回复，写入用户级 OLLAMA_MODELS；Vesper 管理的服务会自动重启，之后的下载使用新目录。
+- 对外部托盘 Ollama 不强制结束进程。设置显示「待生效」，退出系统托盘 Ollama 后点击「应用目录并重启」。新目录生效前阻止开始新下载，避免写入旧位置。
+- 已有模型文件不会自动迁移或删除。切回原目录可重新使用该目录的模型及未完成的下载记录。
+- `npm.cmd run test:directory` 使用独立用户目录，受控替代文件夹对话框、用户环境变量写入和 Ollama 进程；验证 IPC、路径传参、暂停续传、外部服务拦截、错误处理、语言和持久化。结果位于 `work/directory-results.json`，不向日常模型目录写入测试数据。

@@ -183,9 +183,38 @@ function openSettings() {
   $('apiKey').placeholder = s.hasKey ? t("已保存 · ••••{0}", [s.keyLast4]) : t("填写你的 API Key（本地 Ollama 可留空）");
   $('keyHint').textContent = s.hasKey ? t("已保存 · 尾号 {0}", [s.keyLast4 || t("未知")]) : t("未保存");
   $('connectionResult').textContent = window.VesperI18n.message(s.keyError || ''); $('connectionResult').className = 'connection-result' + (s.keyError ? ' error' : '');
-  syncSettingsMode();
+  syncSettingsMode(); syncSettingsDirectory();
+  localPanel.load();
   $('settingsOverlay').hidden = false; $('settingsPanel').focus();
 }
+function syncSettingsDirectory() {
+  const state = localState;
+  const pending = state?.config.pendingModelDirectory;
+  $('settingsModelDirectory').value = pending || state?.config.modelDirectory || state?.storage?.defaultDirectory || '';
+  const working = localPanel.operations.has('directory') || state?.changingDirectory;
+  const locked = !state || working || state?.installer?.busy;
+  $('settingsChooseDirectory').disabled = Boolean(locked);
+  $('settingsChooseDirectory').textContent = working ? t('正在更改位置…') : t('更改下载位置');
+  $('settingsApplyDirectory').hidden = !pending;
+  $('settingsApplyDirectory').disabled = Boolean(locked);
+  const status = $('settingsDirectoryStatus');
+  status.classList.toggle('directory-pending', Boolean(pending));
+  status.textContent = !state ? t('正在读取下载位置…') : working ? t('正在应用下载位置，请稍候…')
+    : pending ? t('下载位置待生效：请先退出系统托盘中的 Ollama，再点击“应用目录并重启”。生效前暂停新下载。')
+    : state.service.owner === 'external' ? t('已连接外部 Ollama，无法确认它的实际下载目录。更改位置后需退出外部服务并应用。')
+    : state.service.activeDirectory ? t('此位置已生效，后续下载的模型保存在这里。')
+    : t('此位置将在 Vesper 下次启动 Ollama 时用于模型下载。');
+}
+async function changeSettingsDirectory(applyPending = false) {
+  if (localPanel.operations.has('directory')) return;
+  localPanel.operations.add('directory'); syncSettingsDirectory(); localPanel.render();
+  try {
+    localPanel.accept(await call(applyPending ? api.local.applyDirectory() : api.local.chooseDirectory()));
+  } catch (error) { toast(error.message); }
+  finally { localPanel.operations.delete('directory'); syncSettingsDirectory(); localPanel.render(); }
+}
+$('settingsChooseDirectory').onclick = () => changeSettingsDirectory();
+$('settingsApplyDirectory').onclick = () => changeSettingsDirectory(true);
 function closeSettings() { $('settingsOverlay').hidden = true; $('apiKey').value = ''; $('apiKey').type = 'password'; applyTheme(data.settings.theme); previousFocus?.focus(); }
 $('settingsOpen').onclick = openSettings; $('settingsClose').onclick = closeSettings;
 $('settingsOverlay').onclick = event => { if (event.target === $('settingsOverlay')) closeSettings(); };
@@ -217,7 +246,7 @@ for (const button of document.querySelectorAll('[data-preset]')) {
 $('settingsForm').onsubmit = async event => {
   event.preventDefault(); $('saveSettings').disabled = true;
   try {
-    data.settings = await call(api.saveSettings(settingsValue())); window.VesperI18n.setLanguage(data.settings.language); render(); localPanel.render(); closeSettings();
+    data.settings = await call(api.saveSettings(settingsValue())); window.VesperI18n.setLanguage(data.settings.language); render(); localPanel.render(); syncSettingsDirectory(); closeSettings();
     toast(busy ? t("设置已保存，将用于下一条消息。当前回复继续使用发送时的模式。") : t("设置已保存，立即生效。"));
   } catch(e) { toast(e.message); } finally { $('saveSettings').disabled = false; }
 };
@@ -265,7 +294,7 @@ document.addEventListener('keydown', e => {
 const localPanel = new window.VesperLocalPanel({
   api: api.local, call, toast,
   setMode: async mode => { data.settings = await call(api.saveSettings({ mode })); renderMode(); },
-  onState: value => { localState = value; if (data) renderMode(); }
+  onState: value => { localState = value; if (data) { renderMode(); syncSettingsDirectory(); } }
 });
 $('localOpen').onclick = () => localPanel.open();
 $('settingsLocalOpen').onclick = () => { closeSettings(); localPanel.open(); };

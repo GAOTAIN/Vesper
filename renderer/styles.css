@@ -167,3 +167,9 @@ html:lang(en) .eyebrow{letter-spacing:1px}
 html:lang(en) .local-note{line-height:1.6}
 html:lang(en) .composer-caption{flex-wrap:wrap}
 html:lang(en) .mode-options>label{min-width:0}
+
+/* 下载目录可复制，操作按钮随窗口宽度换行。 */
+.model-directory-field input[readonly]{cursor:text;font-family:Consolas,"Microsoft YaHei UI",monospace}
+.directory-settings-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.directory-settings-actions .quiet-btn{border:1px solid var(--border)}
+.field>.directory-pending{color:var(--danger)}
