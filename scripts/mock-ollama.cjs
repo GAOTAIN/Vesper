@@ -36,6 +36,10 @@ async function startMockOllama() {
         res.writeHead(200, { 'Content-Type': 'application/x-ndjson' });
         let closed = false;
         res.on('close', () => { closed = true; state.chatCloses++; });
+        if (body.model?.startsWith('deepseek-r1:')) {
+          res.write(`${JSON.stringify({ message: { role: 'assistant', thinking: '受控测试思考片段', content: '' }, done: false })}\n`);
+          if (state.thinkingOnly) { res.end(JSON.stringify({ message: { role: 'assistant', content: '' }, done: true, done_reason: 'length' })); return; }
+        }
         const text = body.messages.at(-1)?.content.includes('停止') ? '这是本地停止测试。'.repeat(300) : '你好，这是本机接口测试。\n\n```javascript\nconst local = true;\n```\n\n|方式|状态|\n|---|---|\n|本机|正常|';
         for (const char of text) {
           if (closed) return;

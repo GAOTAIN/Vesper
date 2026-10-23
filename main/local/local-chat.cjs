@@ -26,16 +26,20 @@ function createLocalChat({ service, manager, detector, client }) {
     await manager.verifyLocal(model.ollamaTag, controller.signal);
     const hardware = await waitFor(detector.detect(), controller.signal);
     if (controller.signal.aborted) { const error = new Error('请求已停止。'); error.name = 'AbortError'; throw error; }
-    let done = false, received = false;
+    const reasoning = model.ollamaTag.startsWith('deepseek-r1:');
+    let done = false, received = false, thought = false, limitReached = false;
     await client.stream('/api/chat', {
       model: model.ollamaTag, messages: bounded, stream: true, keep_alive: '2m',
-      options: { num_ctx: 4096, num_predict: 1024, temperature: config.temperature, ...(hardware.cpuFallback ? { num_gpu: 0 } : {}) }
+      // 推理模型为思考与最终回答留出预算，上下文仍固定为 4096。
+      options: { num_ctx: 4096, num_predict: reasoning ? 4096 : 1024, temperature: config.temperature, ...(hardware.cpuFallback ? { num_gpu: 0 } : {}) }
     }, packet => {
       if (packet.remote_host || packet.remote_model) throw new Error('服务返回了远程模型响应，本地模式已中止。');
+      if (typeof packet.message?.thinking === 'string' && packet.message.thinking) thought = true;
       if (typeof packet.message?.content === 'string' && packet.message.content) { received = true; onDelta(packet.message.content); }
-      if (packet.done === true) done = true;
+      if (packet.done === true) { done = true; limitReached = packet.done_reason === 'length'; }
     }, { signal: controller.signal, headerTimeout: 180000, idleTimeout: 180000 });
     if (!done) throw new Error('本地回复意外中断，未收到结束标记。');
+    if (!received && thought) throw new Error(limitReached ? '本次推理已达到输出上限，尚未生成最终回答。请缩短问题后重试，或切换非推理模型。' : '模型完成了思考，但没有返回最终回答，请重新尝试或切换模型。');
     if (!received) throw new Error('本地模型返回空回复，请重新尝试或切换模型。');
   };
 }

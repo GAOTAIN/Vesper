@@ -24,7 +24,7 @@
     "params": "14B",
     "recommendedVram": "12GB",
     "recommendedRam": "32GB",
-    "sizeGb": 9.0
+    "sizeGb": 9
   },
   {
     "id": "llama3-8b",
@@ -34,5 +34,50 @@
     "recommendedVram": "8GB",
     "recommendedRam": "16GB",
     "sizeGb": 4.7
+  },
+  {
+    "id": "deepseek-r1-1-5b",
+    "name": "DeepSeek R1 1.5B（蒸馏）",
+    "ollamaTag": "deepseek-r1:1.5b",
+    "params": "1.5B",
+    "recommendedVram": "2GB",
+    "recommendedRam": "8GB",
+    "sizeGb": 1.1
+  },
+  {
+    "id": "deepseek-r1-7b",
+    "name": "DeepSeek R1 7B（蒸馏）",
+    "ollamaTag": "deepseek-r1:7b",
+    "params": "7B",
+    "recommendedVram": "8GB",
+    "recommendedRam": "16GB",
+    "sizeGb": 4.7
+  },
+  {
+    "id": "deepseek-r1-8b",
+    "name": "DeepSeek R1 0528 8B",
+    "ollamaTag": "deepseek-r1:8b",
+    "params": "8B",
+    "recommendedVram": "8GB",
+    "recommendedRam": "16GB",
+    "sizeGb": 5.2
+  },
+  {
+    "id": "deepseek-r1-14b",
+    "name": "DeepSeek R1 14B（蒸馏）",
+    "ollamaTag": "deepseek-r1:14b",
+    "params": "14B",
+    "recommendedVram": "12GB",
+    "recommendedRam": "32GB",
+    "sizeGb": 9
+  },
+  {
+    "id": "deepseek-r1-32b",
+    "name": "DeepSeek R1 32B（蒸馏）",
+    "ollamaTag": "deepseek-r1:32b",
+    "params": "32B",
+    "recommendedVram": "24GB",
+    "recommendedRam": "64GB",
+    "sizeGb": 20
   }
 ]

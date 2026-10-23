@@ -22,7 +22,8 @@ function fixture(overrides = {}) {
 
 (async () => {
   const catalog = loadCatalog();
-  assert.equal(catalog.length, 4);
+  assert(catalog.length >= 9);
+  for (const tag of ['1.5b', '7b', '8b', '14b', '32b']) assert(catalog.some(model => model.ollamaTag === `deepseek-r1:${tag}`));
   assert(catalog.some(model => model.ollamaTag === 'qwen2.5:14b'));
   assert(catalog.some(model => model.ollamaTag === 'llama3:8b'));
   assert.throws(() => validateCatalog([...catalog, catalog[0]]), /重复/);
@@ -30,7 +31,11 @@ function fixture(overrides = {}) {
   assert.throws(() => validateCatalog([{ ...catalog[0], ollamaTag: 'qwen:cloud' }]), /本地/);
   assert.throws(() => validateCatalog([{ ...catalog[0], sizeGb: '4.7' }]), /体积/);
   assert.throws(() => validateCatalog([{ ...catalog[0], recommendedRam: '未知' }]), /推荐配置/);
-  pass('模型目录字段、唯一性、Qwen 14B、Llama 3 与本地标签约束');
+  pass('模型目录字段、唯一性、原模型与五种 DeepSeek R1 本地标签');
+  const large = catalog.find(model => model.ollamaTag === 'deepseek-r1:32b');
+  assert.equal(assessHardware(large, { ramGiB: 32, vramGiB: 16 }).belowRecommended, true);
+  assert.equal(assessHardware(large, { ramGiB: 64, vramGiB: 24 }).belowRecommended, false);
+  pass('DeepSeek 32B 的高配置提示与显存、内存拦截生效');
 
   const success = fixture({ si: {
     mem: async () => ({ total: 16 * 1024 ** 3, available: 8 * 1024 ** 3 }),

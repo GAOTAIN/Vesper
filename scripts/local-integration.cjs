@@ -114,6 +114,23 @@ function storage(directory) {
     assert(!mode.snapshot().config.downloading_models.includes('qwen25-3b'));
     assert.equal(mode.snapshot().catalog.find(item => item.id === 'qwen25-3b').progress, 0);
     pass('卸载立即清除安装状态、下载记录与最高进度，不残留已安装卡片');
+
+    await mode.manager.download({ id: 'deepseek-r1-1-5b' });
+    await until(() => mode.snapshot().catalog.find(model => model.id === 'deepseek-r1-1-5b').installed);
+    await mode.manager.select('deepseek-r1-1-5b');
+    let deepseekReply = '';
+    await mode.chat({ ...mode.prepareChat(), systemPrompt: '', temperature: 0.7 }, [{ role: 'user', content: '你好' }], new AbortController(), text => { deepseekReply += text; });
+    assert.equal(mock.state.lastChat.model, 'deepseek-r1:1.5b');
+    assert.equal(mock.state.lastChat.options.num_predict, 4096);
+    assert.equal(mock.state.lastChat.options.num_ctx, 4096);
+    assert.match(deepseekReply, /本机接口测试/); assert(!deepseekReply.includes('受控测试思考片段'));
+    pass('新增 DeepSeek 可部署和选择，思考流后展示最终回答，保持本地上下文限制');
+    mock.state.thinkingOnly = true;
+    await assert.rejects(() => mode.chat({ ...mode.prepareChat(), systemPrompt: '' }, [{ role: 'user', content: '推理问题' }], new AbortController(), () => {}), /推理已达到输出上限/);
+    mock.state.thinkingOnly = false;
+    await mode.manager.remove('deepseek-r1-1-5b');
+    assert(!mode.snapshot().config.downloading_models.includes('deepseek-r1-1-5b'));
+    pass('推理预算耗尽给出具体提示；DeepSeek 卸载后清除下载状态');
   } finally { await mode.manager.pauseAll(); await mock.close(); }
 
   let value = { modelDirectory: path.join(root, 'models'), pendingModelDirectory: null };

@@ -9,6 +9,7 @@ const http = require('node:http');
 const si = require('systeminformation');
 const { startMockOllama } = require('./mock-ollama.cjs');
 const reportRoot = path.join(__dirname, '../work');
+const catalog = require('../assets/models.json');
 const results = [];
 let win;
 const errors = [];
@@ -47,11 +48,15 @@ async function setupWindow() {
   assert.equal(await js('document.getElementById("localOverlay").hidden'), false);
   assert.equal(await js('document.getElementById("modeBadge").textContent'), '本地部署模式');
   assert.equal(await js('document.getElementById("modeBadge").classList.contains("local")'), true);
-  assert.equal(await js('document.querySelectorAll(".local-model-card").length'), 4);
+  assert.equal(await js('document.querySelectorAll(".local-model-card").length'), catalog.length);
+  assert.equal(await js('document.getElementById("localModelCount").textContent'), `${catalog.length} 款本地模型`);
+  for (const model of catalog.filter(item => item.ollamaTag.startsWith('deepseek-r1:'))) {
+    assert.equal(await js(`document.querySelector('[data-model-id="${model.id}"] h4').textContent`), model.name);
+  }
   const state = await invoke('local.state');
   assert(state.hardware.result.checkedAt > 0); assert(Array.isArray(state.installedModels) || state.installedModels === null);
   assert.equal(state.features.chat, true); assert.equal(fetches, 0);
-  pass('顶部按钮实际切换模式、显示四张模型卡、完成真实硬件检测且无云端请求');
+  pass('顶部按钮实际切换模式、显示全部模型卡、完成真实硬件检测且无云端请求');
 
   await js('document.querySelector(".local-requirements-button").click()');
   assert.equal(await js('document.getElementById("localRequirements").open'), true);
@@ -184,6 +189,21 @@ async function setupWindow() {
   await until(() => js('localState.catalog.find(model => model.id === "qwen25-3b").installed === false'));
   assert.equal(await js('document.querySelector("[data-model-id=qwen25-3b] .model-remove").hidden'), true);
   pass('卸载确认后立即刷新卡片与下载状态');
+  await js('document.querySelector("[data-model-id=deepseek-r1-1-5b] .model-download").click()');
+  await until(() => js('localState.catalog.find(model => model.id === "deepseek-r1-1-5b").installed === true'));
+  await invoke('local.selectModel', 'deepseek-r1-1-5b');
+  await js('document.querySelector("[data-model-id=deepseek-r1-1-5b]").scrollIntoView({ block: "start" })');
+  await win.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true });
+  await js('await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  fs.writeFileSync(path.join(reportRoot, 'deepseek-models.png'), (await win.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true })).toPNG());
+  await js('document.getElementById("localClose").click()');
+  await js('document.getElementById("messageInput").value = "DeepSeek 你好";document.getElementById("messageInput").dispatchEvent(new Event("input"));document.getElementById("composer").requestSubmit()');
+  await until(() => js('document.querySelectorAll(".assistant").length === 3 && !document.querySelector(".message.streaming")'));
+  assert.equal(mock.state.lastChat.model, 'deepseek-r1:1.5b');
+  assert.equal(mock.state.lastChat.options.num_predict, 4096);
+  assert.match(await js('document.querySelectorAll(".assistant .markdown")[2].textContent'), /本机接口测试/);
+  assert.match(await js('document.querySelectorAll(".assistant .message-meta")[2].textContent'), /DeepSeek/);
+  pass('新增 DeepSeek 卡片可下载、选为聊天模型并正确渲染思考后的回答');
   await mock.close(); http.request = request;
   assert.equal(fetches, 0); assert.equal(errors.length, 0, errors.join('\n'));
   fs.writeFileSync(path.join(reportRoot, 'local-window-results.json'), JSON.stringify({ time: new Date().toISOString(), profile: app.getPath('userData'), results, hardware: state.hardware.result, cloudRequests: fetches, ollamaIntegrated: true, mockOllama: true, actualWeightsUsed: false }, null, 2));

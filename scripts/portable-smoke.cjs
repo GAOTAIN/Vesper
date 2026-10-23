@@ -9,6 +9,7 @@ const root = path.resolve(__dirname, '..');
 const version = require('../package.json').version;
 const executable = path.join(root, 'dist', `Vesper-${version}-portable.exe`);
 const profile = path.join(root, 'work', `portable-profile-${Date.now()}`);
+const catalog = require('../assets/models.json');
 const results = [];
 let child, socket;
 const pass = name => { results.push({ name, passed: true }); console.log(`通过：${name}`); };
@@ -59,10 +60,14 @@ async function until(task, ms = 30000) { const end = Date.now() + ms; while (Dat
   pass('实际 EXE 的深浅主题均可切换，并在隔离目录写入设置');
   await js('localPanel.open(); true');
   await until(() => js('localState?.hardware.status === "ready"'));
-  assert.equal(await js('document.querySelectorAll(".local-model-card").length'), 4);
+  assert.equal(await js('document.querySelectorAll(".local-model-card").length'), catalog.length);
+  assert.equal(await js('document.getElementById("localModelCount").textContent'), `${catalog.length} 款本地模型`);
+  for (const model of catalog.filter(item => item.ollamaTag.startsWith('deepseek-r1:'))) {
+    assert.equal(await js(`document.querySelector('[data-model-id="${model.id}"] h4').textContent`), model.name);
+  }
   assert.equal(await js('document.getElementById("modeBadge").textContent'), '本地部署模式');
   assert.equal(await js('localState.features.chat'), true);
-  pass('打包后的模型 JSON、systeminformation、预加载 API 和本地管理面板均可加载');
+  pass('实际 EXE 显示全部模型和五种 DeepSeek，模型数据、硬件检测及面板均正常');
   assert.equal(await js('typeof window.vesper.local.installRuntime'), 'function');
   assert.equal(await js('typeof window.vesper.local.cancelInstall'), 'function');
   assert.equal(await js('typeof window.vesper.local.installHelp'), 'undefined');
@@ -72,6 +77,10 @@ async function until(task, ms = 30000) { const end = Date.now() + ms; while (Dat
   await js('document.getElementById("localServiceTitle").scrollIntoView({block:"start"});true');
   const screenshot = await command('Page.captureScreenshot', { format: 'png' });
   fs.writeFileSync(path.join(root, 'work/portable-local-panel.png'), Buffer.from(screenshot.data, 'base64'));
+  await js('document.querySelector("[data-model-id=deepseek-r1-1-5b]").scrollIntoView({block:"start"});true');
+  await js('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  const deepseekScreenshot = await command('Page.captureScreenshot', { format: 'png' });
+  fs.writeFileSync(path.join(root, 'work/portable-deepseek-models.png'), Buffer.from(deepseekScreenshot.data, 'base64'));
   await js('setTimeout(() => window.close(), 50); true').catch(() => {});
   await until(() => child.exitCode !== null, 15000);
   assert.equal(JSON.parse(fs.readFileSync(path.join(profile, 'settings.json'), 'utf8')).mode, 'local');

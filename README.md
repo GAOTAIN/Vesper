@@ -1,4 +1,4 @@
-# Vesper 1.2.0
+# Vesper 1.2.1
 
 [下载最新 Windows EXE](https://github.com/GAOTAIN/Vesper/releases/latest) · [GitHub 源码仓库](https://github.com/GAOTAIN/Vesper)
 
@@ -6,7 +6,7 @@ Windows 桌面聊天客户端。支持离线模拟、在线模型和基于 Ollam
 
 ## 直接运行
 
-从 [v1.2.0 发布页](https://github.com/GAOTAIN/Vesper/releases/tag/v1.2.0) 下载并双击 `Vesper-1.2.0-portable.exe`；本地重新构建的文件位于 `dist`。这是 Windows x64 免安装单文件，目标电脑无需 Node.js。便携程序启动时会将 Electron 运行文件解压到系统临时目录；首次打开可能稍慢，关闭后由启动器清理。持久数据保存在当前 Windows 账户的用户数据目录，不保存在 EXE 旁边。
+从 [v1.2.1 发布页](https://github.com/GAOTAIN/Vesper/releases/tag/v1.2.1) 下载并双击 `Vesper-1.2.1-portable.exe`，本地构建位于 `dist`。这是 Windows x64 免安装单文件，目标电脑无需 Node.js。便携程序启动时会将 Electron 运行文件解压到系统临时目录；首次打开可能稍慢，关闭后由启动器清理。持久数据保存在当前 Windows 账户的用户数据目录，不保存在 EXE 旁边。
 
 首次运行可能被 Windows Defender 或 SmartScreen 提示拦截，这是未签名程序可能出现的提示。确认文件来自你信任的本项目构建后，选择「更多信息 → 仍要运行」。本项目没有购买或嵌入代码签名证书。
 
@@ -73,7 +73,7 @@ npm.cmd install
 npm.cmd run dist
 ```
 
-产物：`E:\模拟AI\dist\Vesper-1.2.0-portable.exe`。`dist\win-unpacked` 是构建中间目录，分享时只需发送 portable EXE。打包配置为 `appId: com.vesper.app`、`productName: Vesper`、Windows x64 `portable`，图标为 `build/icon.ico`。
+产物：`E:\模拟AI\dist\Vesper-1.2.1-portable.exe`。`dist\win-unpacked` 是构建中间目录，分享时只需发送 portable EXE。打包配置为 `appId: com.vesper.app`、`productName: Vesper`、Windows x64 `portable`，图标为 `build/icon.ico`。
 
 `npm run icons` 从手写 `assets/icon.svg` 用 sharp 生成 256×256 的 `build/icon.png` 和含 16/32/48/64/128/256 像素 PNG 的 `build/icon.ico`。`npm install` 的 postinstall 使用 esbuild 把本地 markdown-it、highlight.js 合并成 `renderer/vendor.js`，没有引入前端框架。运行时没有 native npm 模块，所以禁用了多余的 native rebuild。
 
@@ -161,7 +161,7 @@ dist/                             单 EXE 与打包中间文件
 
 - 本地请求固定直连 `http://127.0.0.1:11434`，全部在主进程中使用原生 HTTP 发出，不使用系统 HTTP 代理、不跟随重定向。渲染进程没有网络或命令执行权限。
 - Vesper 管理的服务设置 `OLLAMA_NO_CLOUD=1`、`OLLAMA_NUM_PARALLEL=1`、`OLLAMA_MAX_LOADED_MODELS=1`。复用外部服务时，发送前通过 `/api/show` 检查本地权重，拒绝带远程模型信息或无法确认的模型。
-- 聊天使用 `/api/chat` 的 NDJSON 流，显式传入 `num_ctx: 4096`、`num_predict: 1024`，最多携带最近 10 轮完整历史与当前输入；还按字节预算裁掉旧历史。单条输入最多 6000 UTF-8 字节，系统提示最多 3000 字节；这些长度限制不是精确分词，最终上下文窗口仍由 Ollama 控制。
+- 聊天使用 `/api/chat` 的 NDJSON 流，显式传入 `num_ctx: 4096`、`num_predict: 1024`（DeepSeek R1 为思考和答案提供 4096 的输出预算），最多携带最近 10 轮完整历史与当前输入；还按字节预算裁掉旧历史。单条输入最多 6000 UTF-8 字节，系统提示最多 3000 字节；这些长度限制不是精确分词，最终上下文窗口仍由 Ollama 控制。
 - 停止按钮中断 HTTP 连接，包括服务启动、硬件检测等待阶段。模型空闲保留约两分钟，停止不等于立即卸载权重；资源不足时会给出中文错误。
 - 显存依次使用 `systeminformation.graphics()`、PATH 中的 `nvidia-smi`、固定路径 `C:\\Windows\\System32\\nvidia-smi.exe`。均失败时显存记 0，并以 `num_gpu: 0` 请求 CPU 回退。
 - 内存优先使用 `systeminformation.mem()`，失败回退到系统接口。硬件检测带超时、并发合并和 30 秒缓存。容量使用 GiB；模型下载的 `sizeGb` 使用十进制 GB。推荐配置按 GiB 比较，内存允许 4% 的系统保留余量，显存允许 1% 的容量报告余量并按最大单卡保守评估。
@@ -175,7 +175,7 @@ dist/                             单 EXE 与打包中间文件
 
 | 模块 | 职责 |
 | --- | --- |
-| `assets/models.json` | Qwen 2.5 3B／7B／14B、Llama 3 8B 的目录与估算配置 |
+| `assets/models.json` | Qwen 2.5 3B／7B／14B、Llama 3 8B、DeepSeek R1 1.5B／7B／8B／14B／32B 的目录与估算配置 |
 | `main/local/catalog.cjs` | 目录校验、本地标签限制、推荐配置比对 |
 | `main/local/hardware.cjs` | 三层显存检测、内存回退、缓存和超时 |
 | `main/local/ollama-client.cjs` | 回环 HTTP、NDJSON、超时与中断 |
@@ -215,3 +215,19 @@ node scripts/theme-audit.cjs
 ## 版本编号调整（2026-10-20）
 
 当前本地部署与一键安装版由 v1.1.1 调整为 v1.2.0；前一个已发布的模拟对话改进版由 v1.0.1 调整为 v1.1.0。对应标签、源码版本、EXE 内部版本、下载文件名及校验值均同步更新，功能保持各自原有范围。
+
+## 1.2.1：增加 DeepSeek 本地模型（2026-10-23）
+
+模型商店现为 9 款；原四款模型的标识与下载记录兼容。新增规格均为 Ollama 提供的本地蒸馏模型，8B 标签对应 R1-0528-Qwen3-8B，并非完整 671B 模型。以下体积按官方模型页的默认 Q4_K_M 权重量级记录，可能随上游标签更新。推荐硬件为本项目按 4096 上下文保守估算，并非官方最低要求；显存不足可由用户确认 CPU 回退。
+
+| 新增模型 | Ollama 标签 | 约下载体积 | 推荐显存／内存 | 官方信息 |
+| --- | --- | --- | --- | --- |
+| DeepSeek R1 1.5B（蒸馏） | `deepseek-r1:1.5b` | 1.1 GB | 2 GB／8 GB | [模型页](https://ollama.com/library/deepseek-r1:1.5b) |
+| DeepSeek R1 7B（蒸馏） | `deepseek-r1:7b` | 4.7 GB | 8 GB／16 GB | [模型页](https://ollama.com/library/deepseek-r1:7b) |
+| DeepSeek R1 0528 8B | `deepseek-r1:8b` | 5.2 GB | 8 GB／16 GB | [模型页](https://ollama.com/library/deepseek-r1:8b) |
+| DeepSeek R1 14B（蒸馏） | `deepseek-r1:14b` | 9.0 GB | 12 GB／32 GB | [模型页](https://ollama.com/library/deepseek-r1:14b) |
+| DeepSeek R1 32B（蒸馏） | `deepseek-r1:32b` | 20 GB | 24 GB／64 GB | [模型页](https://ollama.com/library/deepseek-r1:32b) |
+
+DeepSeek 的思考流与最终答案分离，思考阶段继续显示原有「思考中」状态，最终答案使用原有 Markdown 渲染。若推理达到输出预算仍无答案，会显示具体原因。仅增加输出预算，上下文仍为 4096，停止按钮仍可中断请求。下载模型需要用户点击「下载部署」。
+
+本次验证：13 项本地基础、18 项本机 HTTP 集成、13 项 Electron 窗口和 5 项实际 portable EXE 检查通过，共 49 项；另通过主题审计和包内模型数据核对。下载、选择、思考流、最终答案与卸载使用受控本机协议服务测试，未下载真实 DeepSeek 权重，未验证真实 GPU 推理效果。

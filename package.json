@@ -1,6 +1,6 @@
 {
   "name": "vesper",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Vesper · 离线模拟、在线模型与本地部署聊天客户端",
   "main": "main.js",
   "author": "Vesper",
