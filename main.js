@@ -5,7 +5,7 @@ const { randomUUID } = require('node:crypto');
 const { setTimeout: delay } = require('node:timers/promises');
 const { createLocalMode, registerLocalIPC } = require('./main/local/ipc.cjs');
 
-const defaults = { mode: 'simulation', baseURL: 'https://api.openai.com/v1', model: 'gpt-4o-mini', temperature: 0.7, systemPrompt: '你是一个简洁友好的中文助手', theme: 'system', collapsed: false };
+const defaults = { mode: 'simulation', baseURL: 'https://api.openai.com/v1', model: 'gpt-4o-mini', temperature: 0.7, systemPrompt: '你是一个简洁友好的中文助手', theme: 'system', language: 'zh-CN', collapsed: false };
 let settings, database, windowState, win, localMode, active = null, testController = null;
 let recoveryNotice = '';
 const dataFile = name => path.join(app.getPath('userData'), `${name}.json`);
@@ -32,6 +32,7 @@ function readJSON(name, fallback) {
 
 function initStorage() {
   settings = { ...defaults, ...readJSON('settings', {}) };
+  if (!['zh-CN', 'en'].includes(settings.language)) settings.language = defaults.language;
   database = readJSON('conversations', { currentId: null, chats: [] });
   if (!Array.isArray(database.chats)) database = { currentId: null, chats: [] };
   database.chats = database.chats.filter(c => typeof c.id === 'string' && Array.isArray(c.messages));
@@ -101,6 +102,10 @@ function validateSettings(input) {
   if (input.theme !== undefined) {
     if (!['system', 'light', 'dark'].includes(input.theme)) throw new Error('主题选项无效。');
     next.theme = input.theme;
+  }
+  if (input.language !== undefined) {
+    if (!['zh-CN', 'en'].includes(input.language)) throw new Error('语言选项无效。');
+    next.language = input.language;
   }
   if (input.collapsed !== undefined) next.collapsed = Boolean(input.collapsed);
   return next;
@@ -404,7 +409,7 @@ function registerIPC() {
   registerLocalIPC(handle, () => localMode, {
     stopChat: stopLocalChat,
     chooseDirectory: async () => {
-      const result = await dialog.showOpenDialog(win, { title: '选择 Ollama 模型存储目录', defaultPath: localMode.snapshot().config.modelDirectory || app.getPath('home'), properties: ['openDirectory', 'createDirectory'] });
+      const result = await dialog.showOpenDialog(win, { title: settings.language === 'en' ? 'Choose Ollama model storage directory' : '选择 Ollama 模型存储目录', buttonLabel: settings.language === 'en' ? 'Choose folder' : '选择文件夹', defaultPath: localMode.snapshot().config.modelDirectory || app.getPath('home'), properties: ['openDirectory', 'createDirectory'] });
       return result.canceled ? null : result.filePaths[0];
     }
   });

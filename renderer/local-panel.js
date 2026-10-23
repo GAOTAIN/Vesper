@@ -1,4 +1,5 @@
 // 只展示主进程给出的目录和检测结果，不访问文件、命令行或网络。
+const { t: localText } = window.VesperI18n;
 window.VesperLocalPanel = class {
   constructor({ api, call, setMode, onState, toast }) {
     Object.assign(this, { api, call, setMode, onState, toast });
@@ -70,7 +71,7 @@ window.VesperLocalPanel = class {
   }
 
   showError(message) {
-    this.get('localPanelError').textContent = message;
+    this.get('localPanelError').textContent = window.VesperI18n.message(message);
     this.get('localPanelError').hidden = false;
     if (!this.visible) this.toast(message);
   }
@@ -83,7 +84,7 @@ window.VesperLocalPanel = class {
     finally { this.operations.delete(key); this.render(); }
   }
 
-  decision(title, message, { danger = false, label = '确认' } = {}) {
+  decision(title, message, { danger = false, label = localText("确认") } = {}) {
     const dialog = this.get('localDecision');
     if (dialog.open) return Promise.resolve(false);
     this.get('localDecisionTitle').textContent = title;
@@ -100,10 +101,10 @@ window.VesperLocalPanel = class {
     try {
       let result = await this.call(this.api.download({ id }));
       if (result.requiresConfirmation) {
-        const proceed = await this.decision('硬件配置警告', `${result.warning}\n${result.reasons.join('；')}。${result.cpuFallback ? '显存未检出，将按 CPU 回退运行。' : ''}`, { danger: true, label: '强制继续' });
+        const proceed = await this.decision(localText("硬件配置警告"), `${window.VesperI18n.message(result.warning)}\n${result.reasons.map(window.VesperI18n.message).join('; ')}。${result.cpuFallback ? localText("显存未检出，将按 CPU 回退运行。") : ''}`, { danger: true, label: localText("强制继续") });
         if (!proceed) return;
         result = await this.call(this.api.download({ id, confirmationToken: result.confirmationToken }));
-        if (result.requiresConfirmation) throw new Error('硬件或目录状态已变化，请重新点击下载并确认。');
+        if (result.requiresConfirmation) throw new Error(localText("硬件或目录状态已变化，请重新点击下载并确认。"));
       }
       await this.load();
     } catch (error) { this.showError(error.message); }
@@ -112,7 +113,7 @@ window.VesperLocalPanel = class {
 
   async remove(id) {
     const model = this.state.catalog.find(item => item.id === id);
-    if (!await this.decision('卸载本地模型？', `将卸载 ${model.name}，并停止该模型的下载或当前本地回复。其他模型仍使用的共享权重由 Ollama 管理。`)) return;
+    if (!await this.decision(localText("卸载本地模型？"), localText("将卸载 {0}，并停止该模型的下载或当前本地回复。其他模型仍使用的共享权重由 Ollama 管理。", [model.name]))) return;
     return this.operation(`remove:${id}`, () => this.api.remove(id));
   }
 
@@ -121,7 +122,7 @@ window.VesperLocalPanel = class {
     this.detecting = true;
     this.get('localPanelError').hidden = true;
     this.get('localDetect').disabled = true;
-    this.get('localHardwareStatus').textContent = '正在检测内存与显存，可能需要约 20 秒…';
+    this.get('localHardwareStatus').textContent = localText("正在检测内存与显存，可能需要约 20 秒…");
     try { this.accept(await this.call(this.api.detectHardware({ force }))); }
     catch (error) { this.showError(error.message); }
     finally { this.detecting = false; this.get('localDetect').disabled = this.state?.hardware.status === 'detecting'; }
@@ -131,61 +132,62 @@ window.VesperLocalPanel = class {
     if (!this.state) return;
     const hardware = this.state.hardware, result = hardware.result;
     const service = this.state.service;
-    const statuses = { idle: '尚未检测', ready: '已连接', stopped: '未启动', missing: '未安装', starting: '启动中', error: '连接异常' };
-    this.get('localServiceStatus').textContent = statuses[service.status] || '未知状态';
+    const statuses = { idle: localText("尚未检测"), ready: localText("已连接"), stopped: localText("未启动"), missing: localText("未安装"), starting: localText("启动中"), error: localText("连接异常") };
+    this.get('localServiceStatus').textContent = statuses[service.status] || localText("未知状态");
     this.get('localServiceStatus').classList.toggle('local', service.status === 'ready');
-    this.get('localServiceDetail').textContent = service.error || (service.owner === 'external' ? '已复用外部 Ollama；模型目录未确认。聊天只允许具有本地权重的模型。' : service.owner === 'vesper' ? '服务由 Vesper 管理，已禁用 Ollama 云功能。' : '固定连接本机 127.0.0.1:11434，不使用云端 API。');
+    this.get('localServiceDetail').textContent = window.VesperI18n.message(service.error) || (service.owner === 'external' ? localText("已复用外部 Ollama；模型目录未确认。聊天只允许具有本地权重的模型。") : service.owner === 'vesper' ? localText("服务由 Vesper 管理，已禁用 Ollama 云功能。") : localText("固定连接本机 127.0.0.1:11434，不使用云端 API。"));
     const installer = this.state.installer;
     const installing = Boolean(installer?.busy || this.operations.has('install'));
     this.get('localInstall').disabled = installing || service.status === 'ready' || this.state.changingDirectory || this.operations.has('directory');
-    this.get('localInstall').textContent = installing ? '正在部署运行库…' : service.status === 'ready' ? 'Ollama 已就绪' : installer?.status === 'error' ? '重试本地安装' : '本地安装 Ollama';
+    this.get('localInstall').textContent = installing ? localText("正在部署运行库…") : service.status === 'ready' ? localText("Ollama 已就绪") : installer?.status === 'error' ? localText("重试本地安装") : localText("本地安装 Ollama");
     this.get('localInstallProgressWrap').hidden = !installer || installer.status === 'idle';
     const installProgress = this.get('localInstallProgress');
     if (installer?.status === 'downloading') installProgress.value = installer.progress;
     else installProgress.removeAttribute('value');
     installProgress.hidden = !installer?.busy;
     const size = bytes => `${(bytes / 1024 ** 3).toFixed(2)} GiB`;
-    this.get('localInstallDetail').textContent = installer ? (installer.error || installer.message) + (installer.status === 'downloading' ? ` ${installer.progress}% · ${size(installer.received)} / ${size(installer.total)}` : '') : '';
+    this.get('localInstallDetail').textContent = installer ? window.VesperI18n.message(installer.error || installer.message) + (installer.status === 'downloading' ? ` ${installer.progress}% · ${size(installer.received)} / ${size(installer.total)}` : '') : '';
     this.get('localInstallDetail').classList.toggle('local-warning', installer?.status === 'error');
     this.get('localInstallCancel').hidden = !installer?.canCancel;
     this.get('localInstallCancel').disabled = this.operations.has('cancel-install');
     this.get('localConnect').disabled = installing || this.operations.has('connect') || service.status === 'starting' || Boolean(this.state.config.pendingModelDirectory);
-    this.get('localConnect').textContent = this.operations.has('connect') || service.status === 'starting' ? '正在连接…' : '启动或重新连接';
+    this.get('localConnect').textContent = this.operations.has('connect') || service.status === 'starting' ? localText("正在连接…") : localText("启动或重新连接");
     this.get('localRefresh').disabled = this.operations.has('refresh');
     this.get('localChooseDirectory').disabled = installing || this.operations.has('directory') || this.state.changingDirectory;
     this.get('localApplyDirectory').disabled = installing || this.operations.has('directory') || this.state.changingDirectory;
-    const gib = value => Number.isFinite(value) ? `${value.toFixed(1)} GiB` : '未知';
+    const gib = value => Number.isFinite(value) ? `${value.toFixed(1)} GiB` : localText("未知");
     this.get('localDetect').disabled = hardware.status === 'detecting';
-    this.get('localDetect').textContent = hardware.status === 'detecting' ? '检测中…' : '重新检测';
-    this.get('localHardwareStatus').textContent = hardware.status === 'detecting' ? '正在检测内存与显存，可能需要约 20 秒…'
-      : hardware.status === 'error' ? hardware.error : result ? '检测完成 · 以下容量采用 GiB，显存按最大单卡保守评估' : '尚未检测';
-    this.get('localRam').textContent = result ? (result.ramGiB > 0 ? gib(result.ramGiB) : '未知') : '—';
+    this.get('localDetect').textContent = hardware.status === 'detecting' ? localText("检测中…") : localText("重新检测");
+    this.get('localHardwareStatus').textContent = hardware.status === 'detecting' ? localText("正在检测内存与显存，可能需要约 20 秒…")
+      : hardware.status === 'error' ? window.VesperI18n.message(hardware.error) : result ? localText("检测完成 · 以下容量采用 GiB，显存按最大单卡保守评估") : localText("尚未检测");
+    this.get('localRam').textContent = result ? (result.ramGiB > 0 ? gib(result.ramGiB) : localText("未知")) : '—';
     this.get('localAvailableRam').textContent = result ? gib(result.availableRamGiB) : '—';
-    this.get('localVram').textContent = result ? (result.cpuFallback ? '0 GiB · CPU 评估' : gib(result.vramGiB)) : '—';
+    this.get('localVram').textContent = result ? (result.cpuFallback ? localText("0 GiB · CPU 评估") : gib(result.vramGiB)) : '—';
     this.get('localGpu').textContent = result?.gpuName || '';
     const warnings = this.get('localHardwareWarnings'); warnings.replaceChildren();
     for (const warning of result?.warnings || []) {
-      const li = document.createElement('li'); li.textContent = warning;
+      const li = document.createElement('li'); li.textContent = window.VesperI18n.message(warning);
       if (result.cpuFallback || result.ramGiB <= 0) li.className = 'local-warning';
       warnings.append(li);
     }
-    const sources = { systeminformation: '系统信息库', 'node:os': '系统备用接口', 'nvidia-smi': 'NVIDIA 命令', 'absolute-path': 'NVIDIA 绝对路径', 'cpu-fallback': 'CPU 保守回退', unknown: '未知', memory: '内存主接口', 'memory-fallback': '内存备用接口', graphics: '显卡主接口' };
-    this.get('localHardwareSource').textContent = result ? `内存：${sources[result.ramSource]}；显存：${sources[result.vramSource]}` : '尚无检测数据';
+    const sources = { systeminformation: localText("系统信息库"), 'node:os': localText("系统备用接口"), 'nvidia-smi': localText("NVIDIA 命令"), 'absolute-path': localText("NVIDIA 绝对路径"), 'cpu-fallback': localText("CPU 保守回退"), unknown: localText("未知"), memory: localText("内存主接口"), 'memory-fallback': localText("内存备用接口"), graphics: localText("显卡主接口") };
+    this.get('localHardwareSource').textContent = result ? localText("内存：{0}；显存：{1}", [sources[result.ramSource], sources[result.vramSource]]) : localText("尚无检测数据");
     const diagnostics = this.get('localHardwareDiagnostics'); diagnostics.replaceChildren();
     for (const item of result?.diagnostics || []) {
-      const li = document.createElement('li'); li.textContent = `${sources[item.stage] || item.stage}：${item.message}`; diagnostics.append(li);
+      const li = document.createElement('li'); li.textContent = `${sources[item.stage] || item.stage}：${window.VesperI18n.message(item.message)}`; diagnostics.append(li);
     }
-    this.get('localDirectory').textContent = service.activeDirectory || (service.owner === 'external' ? '外部服务的实际目录未确认' : this.state.config.modelDirectory || '默认 Ollama 模型目录（启动后确认）');
+    this.get('localDirectory').textContent = service.activeDirectory || (service.owner === 'external' ? localText("外部服务的实际目录未确认") : this.state.config.modelDirectory || localText("默认 Ollama 模型目录（启动后确认）"));
     const pending = this.state.config.pendingModelDirectory;
     this.get('localDirectoryPending').hidden = !pending;
-    this.get('localDirectoryPending').textContent = pending ? `待生效：${pending}。请退出外部 Ollama 后应用。` : '';
+    this.get('localDirectoryPending').textContent = pending ? localText("待生效：{0}。请退出外部 Ollama 后应用。", [pending]) : '';
     this.get('localApplyDirectory').hidden = !pending;
-    const families = [...new Set(this.state.catalog.map(model => model.family || '其他'))];
+    const families = [...new Set(this.state.catalog.map(model => model.family || localText("其他")))];
     const familySelect = this.get('localModelFamily');
     if (familySelect.options.length !== families.length + 1) {
-      familySelect.replaceChildren(new Option('全部系列', ''), ...families.map(family => new Option(family, family)));
+      familySelect.replaceChildren(new Option(localText("全部系列"), ''), ...families.map(family => new Option(family, family)));
       familySelect.value = this.family;
     }
+    familySelect.options[0].textContent = localText("全部系列");
     const list = this.get('localModels');
     for (const model of this.state.catalog) {
       let card = [...list.children].find(item => item.dataset.modelId === model.id);
@@ -202,12 +204,12 @@ window.VesperLocalPanel = class {
     const selected = this.family || this.query;
     const cards = new Map([...this.get('localModels').children].map(card => [card.dataset.modelId, card]));
     for (const model of this.state.catalog) {
-      const family = model.family || '其他';
-      const matches = (!this.family || family === this.family) && (!this.query || `${model.name} ${model.ollamaTag} ${family} ${model.description || ''}`.toLowerCase().includes(this.query));
+      const family = model.family || localText("其他");
+      const matches = (!this.family || family === this.family) && (!this.query || `${model.name} ${model.ollamaTag} ${family} ${model.description || ''} ${localText(model.description || '')}`.toLowerCase().includes(this.query));
       if (cards.has(model.id)) cards.get(model.id).hidden = !matches;
       if (matches) visible++;
     }
-    this.get('localModelCount').textContent = selected ? `${visible} / ${this.state.catalog.length} 款本地模型` : `${this.state.catalog.length} 款本地模型`;
+    this.get('localModelCount').textContent = selected ? localText("{0} / {1} 款本地模型", [visible, this.state.catalog.length]) : localText("{0} 款本地模型", [this.state.catalog.length]);
     this.get('localModelEmpty').hidden = visible > 0;
     this.get('localModelClear').hidden = !selected;
   }
@@ -215,13 +217,13 @@ window.VesperLocalPanel = class {
   modelCard(model) {
     const card = document.createElement('article'); card.className = 'local-model-card'; card.dataset.modelId = model.id;
     // 固定结构中的所有模型内容均通过 textContent 写入。
-    card.innerHTML = '<div class="local-section-heading"><h4></h4><span class="local-help local-model-size"></span></div><code class="local-model-tag"></code><p class="local-model-spec"></p><p class="local-model-assessment"></p><div class="local-progress-wrap" hidden><progress class="model-progress" max="100" value="0" aria-label="模型下载进度"></progress><p class="local-help model-progress-text" role="status"></p></div><p class="model-error local-warning" hidden></p><div class="local-model-actions"><button class="quiet-btn local-requirements-button">查看配置</button><div><button class="quiet-btn model-remove" hidden>卸载</button><button class="primary-button model-download">下载部署</button></div></div>';
+    card.innerHTML = localText("<div class=\"local-section-heading\"><h4></h4><span class=\"local-help local-model-size\"></span></div><code class=\"local-model-tag\"></code><p class=\"local-model-spec\"></p><p class=\"local-model-assessment\"></p><div class=\"local-progress-wrap\" hidden><progress class=\"model-progress\" max=\"100\" value=\"0\" aria-label=\"模型下载进度\"></progress><p class=\"local-help model-progress-text\" role=\"status\"></p></div><p class=\"model-error local-warning\" hidden></p><div class=\"local-model-actions\"><button class=\"quiet-btn local-requirements-button\">查看配置</button><div><button class=\"quiet-btn model-remove\" hidden>卸载</button><button class=\"primary-button model-download\">下载部署</button></div></div>");
     card.querySelector('h4').textContent = model.name;
-    card.querySelector('.local-model-size').textContent = `约 ${model.sizeGb.toFixed(1)} GB · ${model.params}`;
+    card.querySelector('.local-model-size').textContent = localText("约 {0} GB · {1}", [model.sizeGb.toFixed(1), model.params]);
     card.querySelector('.local-model-tag').textContent = model.ollamaTag;
-    card.querySelector('.local-model-spec').textContent = `推荐显存 ${model.recommendedVram} · 内存 ${model.recommendedRam}`;
+    card.querySelector('.local-model-spec').textContent = localText("推荐显存 {0} · 内存 {1}", [model.recommendedVram, model.recommendedRam]);
     const description = document.createElement('p'); description.className = 'local-model-description local-help';
-    description.textContent = `${model.family || '其他'} · ${model.openness === 'fully-open' ? '训练过程开放' : '开放权重'}${model.description ? ' · ' + model.description : ''}`;
+    description.textContent = `${model.family || localText("其他")} · ${model.openness === 'fully-open' ? localText("训练过程开放") : localText("开放权重")}${model.description ? ' · ' + model.description : ''}`;
     card.querySelector('.local-model-spec').after(description);
     card.querySelector('.local-requirements-button').onclick = () => this.requirements(model);
     card.querySelector('.model-remove').onclick = () => this.remove(model.id);
@@ -245,25 +247,31 @@ window.VesperLocalPanel = class {
   }
 
   updateCard(card, model) {
+    card.querySelector('.local-model-size').textContent = localText("约 {0} GB · {1}", [model.sizeGb.toFixed(1), model.params]);
+    card.querySelector('.local-model-spec').textContent = localText("推荐显存 {0} · 内存 {1}", [model.recommendedVram, model.recommendedRam]);
+    card.querySelector('.local-model-description').textContent = [model.family || localText("其他"), model.openness === 'fully-open' ? localText("训练过程开放") : localText("开放权重"), localText(model.description || '')].filter(Boolean).join(' · ');
+    card.querySelector('.local-requirements-button').textContent = localText("查看配置");
+    card.querySelector('.model-remove').textContent = localText("卸载");
+    card.querySelector('.model-progress').setAttribute('aria-label', localText("模型下载进度"));
     card.tabIndex = model.installed ? 0 : -1;
     const assessment = card.querySelector('.local-model-assessment');
-    assessment.textContent = !model.assessment ? '检测硬件后显示推荐配置评估。' : model.assessment.belowRecommended ? '硬件配置低于推荐要求，可能卡顿或崩溃。' : '总容量达到目录推荐值；实际运行还受可用资源与驱动影响。';
+    assessment.textContent = !model.assessment ? localText("检测硬件后显示推荐配置评估。") : model.assessment.belowRecommended ? localText("硬件配置低于推荐要求，可能卡顿或崩溃。") : localText("总容量达到目录推荐值；实际运行还受可用资源与驱动影响。");
     assessment.classList.toggle('local-warning', model.assessment?.belowRecommended === true);
     const button = card.querySelector('.model-download');
     const selected = this.state.config.selectedModelId === model.id;
-    button.textContent = model.status === 'downloading' ? '暂停下载' : model.status === 'deleting' ? '正在卸载…' : model.installed ? (selected ? '当前模型' : '用于聊天') : model.status === 'interrupted' ? '继续下载' : '下载部署';
+    button.textContent = model.status === 'downloading' ? localText("暂停下载") : model.status === 'deleting' ? localText("正在卸载…") : model.installed ? (selected ? localText("当前模型") : localText("用于聊天")) : model.status === 'interrupted' ? localText("继续下载") : localText("下载部署");
     button.disabled = this.state.installer?.busy || ['download', 'pause', 'select', 'remove'].some(key => this.operations.has(`${key}:${model.id}`)) || model.status === 'deleting' || this.state.changingDirectory || Boolean(this.state.config.pendingModelDirectory) || (model.installed && selected);
     const remove = card.querySelector('.model-remove');
     remove.hidden = !model.installed; remove.disabled = model.status === 'deleting' || this.operations.has(`remove:${model.id}`);
     const progress = card.querySelector('.model-progress'); progress.value = model.progress;
     card.querySelector('.local-progress-wrap').hidden = !['downloading', 'interrupted'].includes(model.status);
-    card.querySelector('.model-progress-text').textContent = `${model.progress}% · ${model.stage || '等待下载'}${model.status === 'interrupted' ? '；续传时复用 Ollama 缓存' : ''}`;
-    const error = card.querySelector('.model-error'); error.hidden = !model.error; error.textContent = model.error;
+    card.querySelector('.model-progress-text').textContent = `${model.progress}% · ${window.VesperI18n.message(model.stage) || localText("等待下载")}${model.status === 'interrupted' ? localText("；续传时复用 Ollama 缓存") : ''}`;
+    const error = card.querySelector('.model-error'); error.hidden = !model.error; error.textContent = window.VesperI18n.message(model.error);
   }
 
   requirements(model) {
-    this.get('localRequirementsTitle').textContent = `${model.name} · 配置需求`;
-    this.get('localRequirementsText').textContent = `模型体积约 ${model.sizeGb} GB，参数量 ${model.params}。推荐显存 ${model.recommendedVram}、内存 ${model.recommendedRam}，按 4096 上下文评估。推荐配置为本项目估算，显存不足时可能转为较慢的 CPU 运行。${model.description ? ' ' + model.description : ''}`;
+    this.get('localRequirementsTitle').textContent = localText("{0} · 配置需求", [model.name]);
+    this.get('localRequirementsText').textContent = localText("模型体积约 {0} GB，参数量 {1}。推荐显存 {2}、内存 {3}，按 4096 上下文评估。推荐配置为本项目估算，显存不足时可能转为较慢的 CPU 运行。{4}", [model.sizeGb, model.params, model.recommendedVram, model.recommendedRam, model.description ? ' ' + localText(model.description) : '']);
     this.get('localRequirements').showModal(); this.get('localRequirementsClose').focus();
   }
 

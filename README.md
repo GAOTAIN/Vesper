@@ -1,12 +1,12 @@
-# Vesper 1.3.0
+# Vesper 1.3.1
 
-[下载最新 Windows EXE](https://github.com/GAOTAIN/Vesper/releases/latest) · [GitHub 源码仓库](https://github.com/GAOTAIN/Vesper)
+[下载最新 Windows EXE](https://github.com/GGAAOOTTIIAANN/Vesper/releases/latest) · [GitHub 源码仓库](https://github.com/GGAAOOTTIIAANN/Vesper)
 
 Windows 桌面聊天客户端。支持离线模拟、在线模型和基于 Ollama 的真实本地部署三种模式。点击「本地部署 → 本地安装 Ollama」可自动下载、校验并安装运行库，再选择模型下载使用。界面、头像、Markdown 和代码高亮均为本地资源，不使用 CDN。
 
 ## 直接运行
 
-从 [v1.3.0 发布页](https://github.com/GAOTAIN/Vesper/releases/tag/v1.3.0) 下载并双击 `Vesper-1.3.0-portable.exe`，本地构建位于 `dist`。这是 Windows x64 免安装单文件，目标电脑无需 Node.js。便携程序启动时会将 Electron 运行文件解压到系统临时目录；首次打开可能稍慢，关闭后由启动器清理。持久数据保存在当前 Windows 账户的用户数据目录，不保存在 EXE 旁边。
+本次本地构建位于 `dist/Vesper-1.3.1-portable.exe`，双击即可运行。已发布版本可从 [GitHub 发布页](https://github.com/GGAAOOTTIIAANN/Vesper/releases) 下载。这是 Windows x64 免安装单文件，目标电脑无需 Node.js。便携程序启动时会将 Electron 运行文件解压到系统临时目录；首次打开可能稍慢，关闭后由启动器清理。持久数据保存在当前 Windows 账户的用户数据目录，不保存在 EXE 旁边。
 
 首次运行可能被 Windows Defender 或 SmartScreen 提示拦截，这是未签名程序可能出现的提示。确认文件来自你信任的本项目构建后，选择「更多信息 → 仍要运行」。本项目没有购买或嵌入代码签名证书。
 
@@ -30,6 +30,7 @@ PowerShell 执行策略限制 `npm.ps1` 时使用 `npm.cmd`，无需修改全局
 - 向上滚动阅读历史时，流式回复不会强制把视图拉回底部；点击「回到最新消息」恢复跟随。
 - 代码块有语言标签和复制按钮；支持表格、列表、引用和行内代码。消息中的链接点击后复制地址，可自行在浏览器打开；图片仅显示文字说明，避免远程图片产生隐式网络请求。
 - 设置中可选跟随系统、浅色和深色主题，折叠侧栏状态也会保存。
+- 「设置与偏好 → 界面语言 / Language」支持简体中文和 English，点击「保存设置」后立即切换，下次启动保留。该选项只控制界面，聊天正文、会话标题、输入草稿、模型名称和系统提示词保留原文；未知的系统诊断或第三方错误保留原文，便于排查。
 
 ## 模式与连接
 
@@ -56,7 +57,7 @@ PowerShell 执行策略限制 `npm.ps1` 时使用 `npm.cmd`，无需修改全局
 数据目录：`app.getPath('userData')`，标准 Windows 用户下为 `%APPDATA%\Vesper\`：
 
 - `conversations.json`：会话、消息、标题和当前选中的会话。
-- `settings.json`：模式、地址、模型、主题、侧栏、提示词、Temperature，以及 safeStorage 加密后的密钥。
+- `settings.json`：模式、地址、模型、界面语言、主题、侧栏、提示词、Temperature，以及 safeStorage 加密后的密钥。
 - `window.json`：正常窗口的宽高、位置以及最大化状态。
 
 **密钥只保存在本机，不上传到任何第三方存储。** 在线请求必须将密钥用于你配置的接口认证，并发送当前会话历史；由你选择的接口提供方处理这些请求。模拟模式不发起任何网络请求。程序没有遥测、广告或后台更新请求。
@@ -73,7 +74,7 @@ npm.cmd install
 npm.cmd run dist
 ```
 
-产物：`E:\模拟AI\dist\Vesper-1.3.0-portable.exe`。`dist\win-unpacked` 是构建中间目录，分享时只需发送 portable EXE。打包配置为 `appId: com.vesper.app`、`productName: Vesper`、Windows x64 `portable`，图标为 `build/icon.ico`。
+产物：`E:\模拟AI\dist\Vesper-1.3.1-portable.exe`。`dist\win-unpacked` 是构建中间目录，分享时只需发送 portable EXE。打包配置为 `appId: com.vesper.app`、`productName: Vesper`、Windows x64 `portable`，图标为 `build/icon.ico`。
 
 `npm run icons` 从手写 `assets/icon.svg` 用 sharp 生成 256×256 的 `build/icon.png` 和含 16/32/48/64/128/256 像素 PNG 的 `build/icon.ico`。`npm install` 的 postinstall 使用 esbuild 把本地 markdown-it、highlight.js 合并成 `renderer/vendor.js`，没有引入前端框架。运行时没有 native npm 模块，所以禁用了多余的 native rebuild。
 
@@ -299,3 +300,10 @@ Crystal／CrystalCoder 的上游模型使用自定义 Transformers 架构，尚�
 | Amber | AmberChat 7B（英文对话） · `hf.co/TheBloke/AmberChat-GGUF:Q4_K_M` | 4.081 | 8GB／16GB | [模型页](https://huggingface.co/TheBloke/AmberChat-GGUF) |
 
 本次验证：14 项本地基础、20 项本机协议集成、15 项 Electron 窗口、5 项安装面板回归和 6 项实际 portable EXE 检查通过，共 60 项；另通过 51 条真实来源元数据核验、主题审计和 18 个包内资源匹配检查。实际下载、思考流、选择、聊天与卸载使用受控本机服务验证，未逐个下载或实测全部真实模型推理。
+
+## 1.3.1：界面语言切换（2026-10-23）
+
+- 设置新增简体中文与 English，保存即时生效，JSON 持久化，旧配置默认简体中文。
+- 聊天界面、模式标识、设置、本地模型管理、下载进度、常见错误和代码复制文字随语言切换，模型权重、回复正文与提示词不被改写。
+- 英文文案全部为本地资源，没有翻译接口或新增依赖。原生文件夹选择窗口使用应用语言标题；Windows 系统控件仍由系统语言决定。
+- `npm.cmd run test:language` 使用独立用户目录和受控 Ollama 服务，检查往返切换、下载暂停续传、正文保护、错误提示、语言校验、重启持久化和最小窗口。结果写入 `work/language-results.json`。

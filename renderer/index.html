@@ -9,6 +9,8 @@
   <link rel="stylesheet" href="themes/github.css" data-highlight="light">
   <link rel="stylesheet" href="themes/github-dark.css" data-highlight="dark">
   <script src="vendor.js" defer></script>
+  <script src="locales-en.js" defer></script>
+  <script src="i18n.js" defer></script>
   <script src="local-panel.js" defer></script>
   <script src="app.js" defer></script>
 </head>
@@ -41,6 +43,7 @@
         <div class="field"><label for="temperature">创造性 <span>Temperature · <output id="temperatureValue">0.7</output></span></label><input id="temperature" type="range" min="0" max="1.5" step="0.1" value="0.7"><div class="range-labels"><span>更稳定</span><span>更发散</span></div></div>
         <div class="field"><label for="systemPrompt">系统提示词</label><textarea id="systemPrompt" rows="3" maxlength="20000"></textarea><small>用于在线与本地模型；本地模式最多 3000 字节（约 1000 个汉字），模拟模式使用内置规则。</small></div>
         <div class="field"><label for="theme">外观主题</label><select id="theme"><option value="system">跟随系统</option><option value="light">浅色 · 白蓝</option><option value="dark">深色 · 黑蓝</option></select></div>
+        <div class="field"><label for="language">界面语言 / Language</label><select id="language"><option value="zh-CN">简体中文</option><option value="en">English</option></select><small>保存后立即切换，聊天内容与系统提示词保持原文。</small></div>
         <div class="privacy-note"><span>◇</span><p>密钥只保存在本机，并由 Windows 本机加密保护，不上传到任何第三方存储。在线请求会将密钥与对话发送给你设置的接口提供方。</p></div>
         <button id="testConnection" type="button" class="test-button">测试连接</button><p id="connectionResult" class="connection-result" role="status"></p>
         <footer class="drawer-footer"><span>保存后立即生效</span><button id="saveSettings" type="submit" class="primary-button">保存设置</button></footer>

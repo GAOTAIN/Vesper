@@ -97,6 +97,24 @@ async function until(task, ms = 30000) { const end = Date.now() + ms; while (Dat
   await js('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
   const openScreenshot = await command('Page.captureScreenshot', { format: 'png' });
   fs.writeFileSync(path.join(root, 'work/portable-fully-open.png'), Buffer.from(openScreenshot.data, 'base64'));
+  await js('localPanel.close();document.getElementById("settingsOpen").click();document.getElementById("language").value="en";document.getElementById("settingsForm").requestSubmit();true');
+  await until(() => js('document.documentElement.lang === "en" && document.getElementById("settingsOverlay").hidden'));
+  assert.equal(await js('document.getElementById("modeBadge").textContent'), 'Local deployment mode');
+  await js('localPanel.render();true');
+  assert.equal(await js('document.getElementById("localModelFamily").options[0].textContent'), 'All families');
+  assert.equal(await js('document.querySelector(".model-download").textContent'), 'Download');
+  pass('实际 EXE 设置支持英文即时切换，本地模型与模式文案同步更新');
+  // 等待新页面上下文，避免 Page.reload 返回后误读尚未卸载的旧页面。
+  await js('window.__portableBeforeReload = true; true');
+  await command('Page.reload');
+  await until(() => js('!window.__portableBeforeReload && Boolean(window.vesper && document.querySelector(".chat-item")) && document.documentElement.lang === "en"'));
+  assert.equal(await js('(async () => (await window.vesper.load()).value.settings.language)()'), 'en');
+  await js('document.getElementById("settingsOpen").click();document.querySelector("label[for=language]").scrollIntoView({block:"center"});true');
+  await js('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  const languageScreenshot = await command('Page.captureScreenshot', {format:'png'});
+  fs.writeFileSync(path.join(root, 'work/portable-language-en.png'), Buffer.from(languageScreenshot.data,'base64'));
+  assert.equal(await js('document.getElementById("language").value'), 'en');
+  pass('实际 EXE 页面重载恢复英文设置，已保存实际界面截图');
   await js('setTimeout(() => window.close(), 50); true').catch(() => {});
   await until(() => child.exitCode !== null, 15000);
   assert.equal(JSON.parse(fs.readFileSync(path.join(profile, 'settings.json'), 'utf8')).mode, 'local');

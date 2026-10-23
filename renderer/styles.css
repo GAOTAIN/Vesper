@@ -160,3 +160,10 @@ button{transition:none}
 .local-model-tools select{flex:0 1 160px;min-width:120px}
 .local-model-tools input,.local-model-tools select{border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-primary);padding:9px 10px;border-radius:8px;font:inherit;font-size:12px}
 .local-model-description{overflow-wrap:anywhere;line-height:1.8;margin:8px 0}
+
+/* 英文文案较长，避免窄窗口下溢出。 */
+html:lang(en) .examples strong,html:lang(en) .examples small{white-space:normal;overflow-wrap:anywhere}
+html:lang(en) .eyebrow{letter-spacing:1px}
+html:lang(en) .local-note{line-height:1.6}
+html:lang(en) .composer-caption{flex-wrap:wrap}
+html:lang(en) .mode-options>label{min-width:0}
