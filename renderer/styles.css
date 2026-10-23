@@ -154,3 +154,9 @@ button{transition:none}
 .model-error{font-size:11px;overflow-wrap:anywhere}
 @media(max-width:950px){.topbar h1{max-width:150px}.topbar .title-group{gap:8px}.topbar-actions{gap:3px}.local-entry{padding:7px 8px}}
 @media(max-width:540px){.local-body{padding:18px}.hardware-grid{gap:6px}.hardware-grid>div{padding:9px}.local-model-card .local-section-heading{align-items:flex-start;flex-direction:column;gap:0}}
+
+.local-model-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.local-model-tools input{flex:1 1 190px;min-width:0}
+.local-model-tools select{flex:0 1 160px;min-width:120px}
+.local-model-tools input,.local-model-tools select{border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-primary);padding:9px 10px;border-radius:8px;font:inherit;font-size:12px}
+.local-model-description{overflow-wrap:anywhere;line-height:1.8;margin:8px 0}

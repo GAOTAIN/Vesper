@@ -1,4 +1,4 @@
-# Vesper 1.2.1
+# Vesper 1.3.0
 
 [下载最新 Windows EXE](https://github.com/GAOTAIN/Vesper/releases/latest) · [GitHub 源码仓库](https://github.com/GAOTAIN/Vesper)
 
@@ -6,7 +6,7 @@ Windows 桌面聊天客户端。支持离线模拟、在线模型和基于 Ollam
 
 ## 直接运行
 
-从 [v1.2.1 发布页](https://github.com/GAOTAIN/Vesper/releases/tag/v1.2.1) 下载并双击 `Vesper-1.2.1-portable.exe`，本地构建位于 `dist`。这是 Windows x64 免安装单文件，目标电脑无需 Node.js。便携程序启动时会将 Electron 运行文件解压到系统临时目录；首次打开可能稍慢，关闭后由启动器清理。持久数据保存在当前 Windows 账户的用户数据目录，不保存在 EXE 旁边。
+从 [v1.3.0 发布页](https://github.com/GAOTAIN/Vesper/releases/tag/v1.3.0) 下载并双击 `Vesper-1.3.0-portable.exe`，本地构建位于 `dist`。这是 Windows x64 免安装单文件，目标电脑无需 Node.js。便携程序启动时会将 Electron 运行文件解压到系统临时目录；首次打开可能稍慢，关闭后由启动器清理。持久数据保存在当前 Windows 账户的用户数据目录，不保存在 EXE 旁边。
 
 首次运行可能被 Windows Defender 或 SmartScreen 提示拦截，这是未签名程序可能出现的提示。确认文件来自你信任的本项目构建后，选择「更多信息 → 仍要运行」。本项目没有购买或嵌入代码签名证书。
 
@@ -73,7 +73,7 @@ npm.cmd install
 npm.cmd run dist
 ```
 
-产物：`E:\模拟AI\dist\Vesper-1.2.1-portable.exe`。`dist\win-unpacked` 是构建中间目录，分享时只需发送 portable EXE。打包配置为 `appId: com.vesper.app`、`productName: Vesper`、Windows x64 `portable`，图标为 `build/icon.ico`。
+产物：`E:\模拟AI\dist\Vesper-1.3.0-portable.exe`。`dist\win-unpacked` 是构建中间目录，分享时只需发送 portable EXE。打包配置为 `appId: com.vesper.app`、`productName: Vesper`、Windows x64 `portable`，图标为 `build/icon.ico`。
 
 `npm run icons` 从手写 `assets/icon.svg` 用 sharp 生成 256×256 的 `build/icon.png` 和含 16/32/48/64/128/256 像素 PNG 的 `build/icon.ico`。`npm install` 的 postinstall 使用 esbuild 把本地 markdown-it、highlight.js 合并成 `renderer/vendor.js`，没有引入前端框架。运行时没有 native npm 模块，所以禁用了多余的 native rebuild。
 
@@ -161,7 +161,7 @@ dist/                             单 EXE 与打包中间文件
 
 - 本地请求固定直连 `http://127.0.0.1:11434`，全部在主进程中使用原生 HTTP 发出，不使用系统 HTTP 代理、不跟随重定向。渲染进程没有网络或命令执行权限。
 - Vesper 管理的服务设置 `OLLAMA_NO_CLOUD=1`、`OLLAMA_NUM_PARALLEL=1`、`OLLAMA_MAX_LOADED_MODELS=1`。复用外部服务时，发送前通过 `/api/show` 检查本地权重，拒绝带远程模型信息或无法确认的模型。
-- 聊天使用 `/api/chat` 的 NDJSON 流，显式传入 `num_ctx: 4096`、`num_predict: 1024`（DeepSeek R1 为思考和答案提供 4096 的输出预算），最多携带最近 10 轮完整历史与当前输入；还按字节预算裁掉旧历史。单条输入最多 6000 UTF-8 字节，系统提示最多 3000 字节；这些长度限制不是精确分词，最终上下文窗口仍由 Ollama 控制。
+- 聊天使用 `/api/chat` 的 NDJSON 流，显式传入 `num_ctx: 4096`、`num_predict: 1024`（目录中标为推理模型的规格为思考和答案提供 4096 的输出预算），最多携带最近 10 轮完整历史与当前输入；还按字节预算裁掉旧历史。单条输入最多 6000 UTF-8 字节，系统提示最多 3000 字节；这些长度限制不是精确分词，最终上下文窗口仍由 Ollama 控制。
 - 停止按钮中断 HTTP 连接，包括服务启动、硬件检测等待阶段。模型空闲保留约两分钟，停止不等于立即卸载权重；资源不足时会给出中文错误。
 - 显存依次使用 `systeminformation.graphics()`、PATH 中的 `nvidia-smi`、固定路径 `C:\\Windows\\System32\\nvidia-smi.exe`。均失败时显存记 0，并以 `num_gpu: 0` 请求 CPU 回退。
 - 内存优先使用 `systeminformation.mem()`，失败回退到系统接口。硬件检测带超时、并发合并和 30 秒缓存。容量使用 GiB；模型下载的 `sizeGb` 使用十进制 GB。推荐配置按 GiB 比较，内存允许 4% 的系统保留余量，显存允许 1% 的容量报告余量并按最大单卡保守评估。
@@ -175,7 +175,7 @@ dist/                             单 EXE 与打包中间文件
 
 | 模块 | 职责 |
 | --- | --- |
-| `assets/models.json` | Qwen 2.5 3B／7B／14B、Llama 3 8B、DeepSeek R1 1.5B／7B／8B／14B／32B 的目录与估算配置 |
+| `assets/models.json` | 51 款本地规格、15 个系列，以及来源、用途、开放类型与估算配置 |
 | `main/local/catalog.cjs` | 目录校验、本地标签限制、推荐配置比对 |
 | `main/local/hardware.cjs` | 三层显存检测、内存回退、缓存和超时 |
 | `main/local/ollama-client.cjs` | 回环 HTTP、NDJSON、超时与中断 |
@@ -218,7 +218,7 @@ node scripts/theme-audit.cjs
 
 ## 1.2.1：增加 DeepSeek 本地模型（2026-10-23）
 
-模型商店现为 9 款；原四款模型的标识与下载记录兼容。新增规格均为 Ollama 提供的本地蒸馏模型，8B 标签对应 R1-0528-Qwen3-8B，并非完整 671B 模型。以下体积按官方模型页的默认 Q4_K_M 权重量级记录，可能随上游标签更新。推荐硬件为本项目按 4096 上下文保守估算，并非官方最低要求；显存不足可由用户确认 CPU 回退。
+1.2.1 版本的模型商店为 9 款；原四款模型的标识与下载记录兼容。新增规格均为 Ollama 提供的本地蒸馏模型，8B 标签对应 R1-0528-Qwen3-8B，并非完整 671B 模型。以下体积按官方模型页的默认 Q4_K_M 权重量级记录，可能随上游标签更新。推荐硬件为本项目按 4096 上下文保守估算，并非官方最低要求；显存不足可由用户确认 CPU 回退。
 
 | 新增模型 | Ollama 标签 | 约下载体积 | 推荐显存／内存 | 官方信息 |
 | --- | --- | --- | --- | --- |
@@ -231,3 +231,71 @@ node scripts/theme-audit.cjs
 DeepSeek 的思考流与最终答案分离，思考阶段继续显示原有「思考中」状态，最终答案使用原有 Markdown 渲染。若推理达到输出预算仍无答案，会显示具体原因。仅增加输出预算，上下文仍为 4096，停止按钮仍可中断请求。下载模型需要用户点击「下载部署」。
 
 本次验证：13 项本地基础、18 项本机 HTTP 集成、13 项 Electron 窗口和 5 项实际 portable EXE 检查通过，共 49 项；另通过主题审计和包内模型数据核对。下载、选择、思考流、最终答案与卸载使用受控本机协议服务测试，未下载真实 DeepSeek 权重，未验证真实 GPU 推理效果。
+
+## 1.3.0：扩充本地模型商店（2026-10-23）
+
+按本次确认的范围，加入前文提到的所有系列中已经核实的 Ollama 本地规格，共 51 款、15 个系列。每个参数量或对话／推理变体选择一个默认量化版本。模型商店增加名称／标签／用途搜索、系列筛选、空结果提示与清除筛选，并展示开放类型和用途说明；旧模型 ID 和下载记录兼容。
+
+“训练过程开放”依据上游的训练代码、数据与配方说明分类，不表示任何机构认证。其他条目标记“开放权重”。多模态模型目前使用文字聊天能力，视觉输入和工具执行不在本次更新范围。大型模型仍受硬件检查和用户确认限制，推荐配置是项目估算，不保证所有硬件和任务均可运行。
+
+48 款使用 Ollama 清单，3 款使用公开 Hugging Face GGUF：SmolLM3 由 ggml-org 提供转换，Amber／AmberChat 使用 TheBloke 社区转换。HF 标识通过 Ollama 本机 `/api/pull` 部署，不调用 Hugging Face 云端推理。首次下载需要访问各自权重仓库；聊天仍固定直连本机且不携带云 API Key。
+
+Crystal／CrystalCoder 的上游模型使用自定义 Transformers 架构，尚未核实到当前 Ollama 支持的兼容 GGUF，因此没有创建虚假的一键下载入口；它仍可按上游方式在 Transformers 中本地运行。[模型配置](https://huggingface.co/IFM/Crystal/blob/main/config.json)。
+
+来源检查命令：`npm.cmd run test:catalog-sources`，只获取公开清单与文件元数据，不下载权重。当前核验日期为 2026-10-23；上游标签可能变化。
+
+| 系列 | 型号／标签 | 下载体积约 GB | 推荐显存／内存 | 来源 |
+| --- | --- | --- | --- | --- |
+| Qwen 2.5 | Qwen 2.5 3B · `qwen2.5:3b` | 1.93 | 4GB／8GB | [模型页](https://ollama.com/library/qwen2.5:3b) |
+| Qwen 2.5 | Qwen 2.5 7B · `qwen2.5:7b` | 4.683 | 8GB／16GB | [模型页](https://ollama.com/library/qwen2.5:7b) |
+| Qwen 2.5 | Qwen 2.5 14B · `qwen2.5:14b` | 8.988 | 12GB／32GB | [模型页](https://ollama.com/library/qwen2.5:14b) |
+| Llama 3 | Llama 3 8B · `llama3:8b` | 4.661 | 8GB／16GB | [模型页](https://ollama.com/library/llama3:8b) |
+| DeepSeek R1 | DeepSeek R1 1.5B（蒸馏） · `deepseek-r1:1.5b` | 1.117 | 2GB／8GB | [模型页](https://ollama.com/library/deepseek-r1:1.5b) |
+| DeepSeek R1 | DeepSeek R1 7B（蒸馏） · `deepseek-r1:7b` | 4.683 | 8GB／16GB | [模型页](https://ollama.com/library/deepseek-r1:7b) |
+| DeepSeek R1 | DeepSeek R1 0528 8B · `deepseek-r1:8b` | 5.225 | 8GB／16GB | [模型页](https://ollama.com/library/deepseek-r1:8b) |
+| DeepSeek R1 | DeepSeek R1 14B（蒸馏） · `deepseek-r1:14b` | 8.988 | 12GB／32GB | [模型页](https://ollama.com/library/deepseek-r1:14b) |
+| DeepSeek R1 | DeepSeek R1 32B（蒸馏） · `deepseek-r1:32b` | 19.851 | 24GB／64GB | [模型页](https://ollama.com/library/deepseek-r1:32b) |
+| Qwen 3.5 | Qwen 3.5 0.8B · `qwen3.5:0.8b` | 1.322 | 3GB／8GB | [模型页](https://ollama.com/library/qwen3.5:0.8b) |
+| Qwen 3.5 | Qwen 3.5 2B · `qwen3.5:2b` | 2.683 | 4GB／8GB | [模型页](https://ollama.com/library/qwen3.5:2b) |
+| Qwen 3.5 | Qwen 3.5 4B · `qwen3.5:4b` | 3.324 | 6GB／16GB | [模型页](https://ollama.com/library/qwen3.5:4b) |
+| Qwen 3.5 | Qwen 3.5 9B · `qwen3.5:9b` | 6.551 | 10GB／16GB | [模型页](https://ollama.com/library/qwen3.5:9b) |
+| Qwen 3.5 | Qwen 3.5 27B · `qwen3.5:27b` | 17.479 | 24GB／64GB | [模型页](https://ollama.com/library/qwen3.5:27b) |
+| Qwen 3.5 | Qwen 3.5 35B · `qwen3.5:35b` | 22.07 | 32GB／64GB | [模型页](https://ollama.com/library/qwen3.5:35b) |
+| Qwen 3.5 | Qwen 3.5 122B · `qwen3.5:122b` | 81.37 | 96GB／192GB | [模型页](https://ollama.com/library/qwen3.5:122b) |
+| Qwen 3 | Qwen 3 0.6B · `qwen3:0.6b` | 0.523 | 2GB／4GB | [模型页](https://ollama.com/library/qwen3:0.6b) |
+| Qwen 3 | Qwen 3 1.7B · `qwen3:1.7b` | 1.359 | 3GB／8GB | [模型页](https://ollama.com/library/qwen3:1.7b) |
+| Qwen 3 | Qwen 3 4B · `qwen3:4b` | 2.497 | 4GB／8GB | [模型页](https://ollama.com/library/qwen3:4b) |
+| Qwen 3 | Qwen 3 8B · `qwen3:8b` | 5.225 | 8GB／16GB | [模型页](https://ollama.com/library/qwen3:8b) |
+| Qwen 3 | Qwen 3 14B · `qwen3:14b` | 9.276 | 12GB／32GB | [模型页](https://ollama.com/library/qwen3:14b) |
+| Qwen 3 | Qwen 3 30B · `qwen3:30b` | 18.557 | 24GB／64GB | [模型页](https://ollama.com/library/qwen3:30b) |
+| Qwen 3 | Qwen 3 32B · `qwen3:32b` | 20.201 | 24GB／64GB | [模型页](https://ollama.com/library/qwen3:32b) |
+| Qwen 3 | Qwen 3 235B · `qwen3:235b` | 142.154 | 192GB／256GB | [模型页](https://ollama.com/library/qwen3:235b) |
+| Qwen Coder | Qwen Coder 0.5B · `qwen2.5-coder:0.5b` | 0.398 | 2GB／4GB | [模型页](https://ollama.com/library/qwen2.5-coder:0.5b) |
+| Qwen Coder | Qwen Coder 1.5B · `qwen2.5-coder:1.5b` | 0.986 | 2GB／8GB | [模型页](https://ollama.com/library/qwen2.5-coder:1.5b) |
+| Qwen Coder | Qwen Coder 3B · `qwen2.5-coder:3b` | 1.93 | 4GB／8GB | [模型页](https://ollama.com/library/qwen2.5-coder:3b) |
+| Qwen Coder | Qwen Coder 7B · `qwen2.5-coder:7b` | 4.683 | 8GB／16GB | [模型页](https://ollama.com/library/qwen2.5-coder:7b) |
+| Qwen Coder | Qwen Coder 14B · `qwen2.5-coder:14b` | 8.988 | 12GB／32GB | [模型页](https://ollama.com/library/qwen2.5-coder:14b) |
+| Qwen Coder | Qwen Coder 32B · `qwen2.5-coder:32b` | 19.851 | 24GB／64GB | [模型页](https://ollama.com/library/qwen2.5-coder:32b) |
+| Gemma 4 | Gemma 4 E2B · `gemma4:e2b` | 4.587 | 12GB／16GB | [模型页](https://ollama.com/library/gemma4:e2b) |
+| Gemma 4 | Gemma 4 E4B · `gemma4:e4b` | 6.584 | 16GB／32GB | [模型页](https://ollama.com/library/gemma4:e4b) |
+| Gemma 4 | Gemma 4 12B · `gemma4:12b` | 8.022 | 12GB／32GB | [模型页](https://ollama.com/library/gemma4:12b) |
+| Gemma 4 | Gemma 4 26B · `gemma4:26b` | 18.731 | 24GB／64GB | [模型页](https://ollama.com/library/gemma4:26b) |
+| Gemma 4 | Gemma 4 31B · `gemma4:31b` | 20.385 | 32GB／64GB | [模型页](https://ollama.com/library/gemma4:31b) |
+| Llama 3.2 | Llama 3.2 1B · `llama3.2:1b` | 1.321 | 2GB／4GB | [模型页](https://ollama.com/library/llama3.2:1b) |
+| Llama 3.2 | Llama 3.2 3B · `llama3.2:3b` | 2.019 | 4GB／8GB | [模型页](https://ollama.com/library/llama3.2:3b) |
+| Phi | Phi-4-mini 3.8B · `phi4-mini:latest` | 2.492 | 4GB／8GB | [模型页](https://ollama.com/library/phi4-mini:latest) |
+| Mistral | Mistral Small 3.2 24B · `mistral-small3.2:24b` | 15.177 | 24GB／64GB | [模型页](https://ollama.com/library/mistral-small3.2:24b) |
+| GLM | GLM-4.7-Flash 30B · `glm-4.7-flash:latest` | 19.019 | 24GB／64GB | [模型页](https://ollama.com/library/glm-4.7-flash:latest) |
+| gpt-oss | gpt-oss 20B · `gpt-oss:20b` | 13.793 | 16GB／32GB | [模型页](https://ollama.com/library/gpt-oss:20b) |
+| gpt-oss | gpt-oss 120B · `gpt-oss:120b` | 65.37 | 80GB／128GB | [模型页](https://ollama.com/library/gpt-oss:120b) |
+| OLMo | OLMo 3 7B（对话） · `olmo-3:7b-instruct` | 4.472 | 8GB／16GB | [模型页](https://ollama.com/library/olmo-3:7b-instruct) |
+| OLMo | OLMo 3 7B（推理） · `olmo-3:7b-think` | 4.472 | 8GB／16GB | [模型页](https://ollama.com/library/olmo-3:7b-think) |
+| OLMo | OLMo 3 32B（推理） · `olmo-3:32b-think` | 19.482 | 24GB／64GB | [模型页](https://ollama.com/library/olmo-3:32b-think) |
+| SmolLM | SmolLM 135M · `smollm2:135m` | 0.271 | 1GB／4GB | [模型页](https://ollama.com/library/smollm2:135m) |
+| SmolLM | SmolLM 360M · `smollm2:360m` | 0.726 | 2GB／4GB | [模型页](https://ollama.com/library/smollm2:360m) |
+| SmolLM | SmolLM 1.7B · `smollm2:1.7b` | 1.82 | 3GB／8GB | [模型页](https://ollama.com/library/smollm2:1.7b) |
+| SmolLM | SmolLM3 3B · `hf.co/ggml-org/SmolLM3-3B-GGUF:Q4_K_M` | 1.915 | 4GB／8GB | [模型页](https://huggingface.co/ggml-org/SmolLM3-3B-GGUF) |
+| Amber | Amber 7B（英文基础） · `hf.co/TheBloke/Amber-GGUF:Q4_K_M` | 4.081 | 8GB／16GB | [模型页](https://huggingface.co/TheBloke/Amber-GGUF) |
+| Amber | AmberChat 7B（英文对话） · `hf.co/TheBloke/AmberChat-GGUF:Q4_K_M` | 4.081 | 8GB／16GB | [模型页](https://huggingface.co/TheBloke/AmberChat-GGUF) |
+
+本次验证：14 项本地基础、20 项本机协议集成、15 项 Electron 窗口、5 项安装面板回归和 6 项实际 portable EXE 检查通过，共 60 项；另通过 51 条真实来源元数据核验、主题审计和 18 个包内资源匹配检查。实际下载、思考流、选择、聊天与卸载使用受控本机服务验证，未逐个下载或实测全部真实模型推理。

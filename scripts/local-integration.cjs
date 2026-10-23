@@ -26,6 +26,7 @@ function storage(directory) {
   parser.push('', true); assert.equal(packets[0].message.content, '中文'); assert.equal(packets[1].done, true);
   assert.throws(() => makeNDJSON(() => {}).push('{bad}\n'), /无效/);
   assert.throws(() => makeNDJSON(() => {}).push('{"error":"out of memory"}\n'), /内存或显存不足/);
+  assert.throws(() => makeNDJSON(() => {}).push('{"error":"unsupported model architecture"}\n'), /更新 Ollama/);
   assert.throws(() => createOllamaClient({ origin: 'http://example.com:11434' }), /回环/);
   pass('NDJSON 跨行分片、中文、尾行、错误包与回环地址限制');
 
@@ -131,6 +132,31 @@ function storage(directory) {
     await mode.manager.remove('deepseek-r1-1-5b');
     assert(!mode.snapshot().config.downloading_models.includes('deepseek-r1-1-5b'));
     pass('推理预算耗尽给出具体提示；DeepSeek 卸载后清除下载状态');
+    mock.state.emitThinking = true;
+    for (const id of ['smollm3-3b', 'amber-7b', 'amber-chat-7b']) {
+      await mode.manager.download({ id });
+      await until(() => mode.snapshot().catalog.find(model => model.id === id).installed);
+      const model = mode.manager.modelById(id);
+      mock.state.installed.delete(model.ollamaTag); mock.state.installed.add(model.ollamaTag.toLowerCase());
+      await mode.manager.refresh(); await mode.manager.select(id);
+      let answer = '';
+      await mode.chat({ ...mode.prepareChat(), systemPrompt: '' }, [{ role: 'user', content: 'Hello' }], new AbortController(), text => { answer += text; });
+      assert.equal(mock.state.lastChat.model, model.ollamaTag);
+      assert.equal(mock.state.lastChat.options.num_predict, model.reasoning ? 4096 : 1024);
+      assert.match(answer, /本机接口测试/); assert(!answer.includes('受控测试思考片段'));
+      mock.state.installed.delete(model.ollamaTag.toLowerCase()); mock.state.installed.add(model.ollamaTag);
+      await mode.manager.remove(id);
+      assert(!mode.snapshot().config.downloading_models.includes(id));
+    }
+    pass('三种 HF GGUF 标识可部署、大小写兼容、选择聊天与卸载，全程仅调用本机服务');
+    for (const tag of ['qwen3.5:4b', 'gemma4:e2b', 'gpt-oss:20b', 'olmo-3:7b-think']) {
+      const model = mode.snapshot().catalog.find(item => item.ollamaTag === tag);
+      mock.state.installed.add(tag); await mode.manager.refresh(); await mode.manager.select(model.id);
+      await mode.chat({ ...mode.prepareChat(), systemPrompt: '' }, [{ role: 'user', content: 'Hello' }], new AbortController(), () => {});
+      assert.equal(mock.state.lastChat.options.num_predict, 4096); assert.equal(mock.state.lastChat.options.num_ctx, 4096);
+    }
+    mock.state.emitThinking = false;
+    pass('Qwen、Gemma、gpt-oss 和 OLMo 按目录标记使用推理预算，上下文仍为 4096');
   } finally { await mode.manager.pauseAll(); await mock.close(); }
 
   let value = { modelDirectory: path.join(root, 'models'), pendingModelDirectory: null };

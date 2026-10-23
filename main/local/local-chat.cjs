@@ -26,7 +26,7 @@ function createLocalChat({ service, manager, detector, client }) {
     await manager.verifyLocal(model.ollamaTag, controller.signal);
     const hardware = await waitFor(detector.detect(), controller.signal);
     if (controller.signal.aborted) { const error = new Error('请求已停止。'); error.name = 'AbortError'; throw error; }
-    const reasoning = model.ollamaTag.startsWith('deepseek-r1:');
+    const reasoning = model.reasoning === true || model.ollamaTag.startsWith('deepseek-r1:');
     let done = false, received = false, thought = false, limitReached = false;
     await client.stream('/api/chat', {
       model: model.ollamaTag, messages: bounded, stream: true, keep_alive: '2m',

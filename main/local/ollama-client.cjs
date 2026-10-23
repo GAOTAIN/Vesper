@@ -9,6 +9,7 @@ function localError(error) {
   if (/^(?:Ollama 返回错误：|内存或显存不足|模型存储磁盘空间不足|无法连接本机 Ollama)/.test(raw)) return error;
   let message;
   if (/ECONNREFUSED|ECONNRESET|socket hang up/i.test(raw)) message = '无法连接本机 Ollama，服务可能尚未启动或已退出。';
+  else if (/requires.*(?:newer|version)|unsupported.*(?:architecture|model)|unknown model architecture/i.test(raw)) message = '当前 Ollama 版本不支持该模型，请更新 Ollama 运行库后重试。';
   else if (/memory|out of memory|cuda.*alloc|VRAM/i.test(raw)) message = '内存或显存不足，请关闭占用资源的程序，或选择更小的模型。';
   else if (/no space|disk.*full|ENOSPC|insufficient.*(?:space|storage)/i.test(raw)) message = '模型存储磁盘空间不足，请清理空间或更换目录。';
   else if (/not found|does not exist/i.test(raw)) message = '模型不存在，请先下载部署所选模型。';

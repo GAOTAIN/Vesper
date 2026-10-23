@@ -12,7 +12,7 @@ function createModelManager({ catalog, store, service, client, detector, emit })
   };
   const namespace = () => createHash('sha256').update(path.resolve(store.snapshot().modelDirectory || process.env.OLLAMA_MODELS || path.join(os.homedir(), '.ollama/models')).toLowerCase()).digest('hex').slice(0, 20);
   const records = () => store.snapshot().downloadRecords[namespace()] || {};
-  const installedTag = tag => installed?.some(item => (item.name === tag || item.model === tag) && !item.remote_host && !item.remote_model);
+  const installedTag = tag => installed?.some(item => [item.name, item.model].some(value => typeof value === 'string' && value.toLowerCase() === tag.toLowerCase()) && !item.remote_host && !item.remote_model);
   const updateRecord = (id, record, remember = true) => store.update(value => {
     const key = namespace();
     if (!value.downloadRecords[key]) value.downloadRecords[key] = {};

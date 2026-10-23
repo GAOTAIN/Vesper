@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { setTimeout: pause } = require('node:timers/promises');
 const { createHardwareDetector } = require('../main/local/hardware.cjs');
-const { loadCatalog, validateCatalog, assessHardware } = require('../main/local/catalog.cjs');
+const { loadCatalog, validateCatalog, assessHardware, isLocalTag } = require('../main/local/catalog.cjs');
 const { createLocalStore } = require('../main/local/local-store.cjs');
 const results = [];
 const pass = name => { results.push({ name, passed: true }); console.log(`通过：${name}`); };
@@ -22,7 +22,8 @@ function fixture(overrides = {}) {
 
 (async () => {
   const catalog = loadCatalog();
-  assert(catalog.length >= 9);
+  assert.equal(catalog.length, 51);
+  for (const family of ['Qwen 3.5', 'Qwen 3', 'Qwen Coder', 'Gemma 4', 'Llama 3.2', 'Phi', 'Mistral', 'GLM', 'gpt-oss', 'OLMo', 'SmolLM', 'Amber']) assert(catalog.some(model => model.family === family));
   for (const tag of ['1.5b', '7b', '8b', '14b', '32b']) assert(catalog.some(model => model.ollamaTag === `deepseek-r1:${tag}`));
   assert(catalog.some(model => model.ollamaTag === 'qwen2.5:14b'));
   assert(catalog.some(model => model.ollamaTag === 'llama3:8b'));
@@ -32,6 +33,11 @@ function fixture(overrides = {}) {
   assert.throws(() => validateCatalog([{ ...catalog[0], sizeGb: '4.7' }]), /体积/);
   assert.throws(() => validateCatalog([{ ...catalog[0], recommendedRam: '未知' }]), /推荐配置/);
   pass('模型目录字段、唯一性、原模型与五种 DeepSeek R1 本地标签');
+  for (const tag of ['hf.co/ggml-org/SmolLM3-3B-GGUF:Q4_K_M', 'hf.co/TheBloke/Amber-GGUF:Q4_K_M', 'alibayram/smollm3:latest']) assert(isLocalTag(tag));
+  for (const tag of ['https://example.com/model', 'hf.co/a/../b:Q4', 'hf.co/a/b:Q4?token=x', 'hf.co/a/b:cloud', 'hf.co/user:secret@host/repo:Q4', 'other.co/a/b:Q4', 'hf.co/a/b:Q4\\file']) assert(!isLocalTag(tag));
+  assert.throws(() => validateCatalog([{ ...catalog[0], reasoning: '是' }]), /推理标记/);
+  assert.throws(() => validateCatalog([{ ...catalog[0], family: '<'.repeat(400) }]), /分类/);
+  pass('所有系列与 HF GGUF 标签校验通过，拒绝任意地址、路径穿越、凭据和云标签');
   const large = catalog.find(model => model.ollamaTag === 'deepseek-r1:32b');
   assert.equal(assessHardware(large, { ramGiB: 32, vramGiB: 16 }).belowRecommended, true);
   assert.equal(assessHardware(large, { ramGiB: 64, vramGiB: 24 }).belowRecommended, false);

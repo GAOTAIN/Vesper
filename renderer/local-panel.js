@@ -7,6 +7,10 @@ window.VesperLocalPanel = class {
     this.opening = false;
     this.detecting = false;
     this.operations = new Set();
+    this.query = ''; this.family = '';
+    this.get('localModelSearch').oninput = event => { this.query = event.target.value.trim().toLowerCase(); this.filterModels(); };
+    this.get('localModelFamily').onchange = event => { this.family = event.target.value; this.filterModels(); };
+    this.get('localModelClear').onclick = () => { this.query = ''; this.family = ''; this.get('localModelSearch').value = ''; this.get('localModelFamily').value = ''; this.filterModels(); this.get('localModelSearch').focus(); };
     this.get('localClose').onclick = () => this.close();
     this.get('localOverlay').onclick = event => { if (event.target === this.get('localOverlay')) this.close(); };
     this.get('localDetect').onclick = () => this.detect(true);
@@ -176,14 +180,36 @@ window.VesperLocalPanel = class {
     this.get('localDirectoryPending').hidden = !pending;
     this.get('localDirectoryPending').textContent = pending ? `待生效：${pending}。请退出外部 Ollama 后应用。` : '';
     this.get('localApplyDirectory').hidden = !pending;
-    this.get('localModelCount').textContent = `${this.state.catalog.length} 款本地模型`;
+    const families = [...new Set(this.state.catalog.map(model => model.family || '其他'))];
+    const familySelect = this.get('localModelFamily');
+    if (familySelect.options.length !== families.length + 1) {
+      familySelect.replaceChildren(new Option('全部系列', ''), ...families.map(family => new Option(family, family)));
+      familySelect.value = this.family;
+    }
     const list = this.get('localModels');
     for (const model of this.state.catalog) {
       let card = [...list.children].find(item => item.dataset.modelId === model.id);
       if (!card) { card = this.modelCard(model); list.append(card); }
       this.updateCard(card, model);
     }
+    this.filterModels();
     if (this.state.lastError) this.showError(this.state.lastError);
+  }
+
+  filterModels() {
+    if (!this.state) return;
+    let visible = 0;
+    const selected = this.family || this.query;
+    const cards = new Map([...this.get('localModels').children].map(card => [card.dataset.modelId, card]));
+    for (const model of this.state.catalog) {
+      const family = model.family || '其他';
+      const matches = (!this.family || family === this.family) && (!this.query || `${model.name} ${model.ollamaTag} ${family} ${model.description || ''}`.toLowerCase().includes(this.query));
+      if (cards.has(model.id)) cards.get(model.id).hidden = !matches;
+      if (matches) visible++;
+    }
+    this.get('localModelCount').textContent = selected ? `${visible} / ${this.state.catalog.length} 款本地模型` : `${this.state.catalog.length} 款本地模型`;
+    this.get('localModelEmpty').hidden = visible > 0;
+    this.get('localModelClear').hidden = !selected;
   }
 
   modelCard(model) {
@@ -194,6 +220,9 @@ window.VesperLocalPanel = class {
     card.querySelector('.local-model-size').textContent = `约 ${model.sizeGb.toFixed(1)} GB · ${model.params}`;
     card.querySelector('.local-model-tag').textContent = model.ollamaTag;
     card.querySelector('.local-model-spec').textContent = `推荐显存 ${model.recommendedVram} · 内存 ${model.recommendedRam}`;
+    const description = document.createElement('p'); description.className = 'local-model-description local-help';
+    description.textContent = `${model.family || '其他'} · ${model.openness === 'fully-open' ? '训练过程开放' : '开放权重'}${model.description ? ' · ' + model.description : ''}`;
+    card.querySelector('.local-model-spec').after(description);
     card.querySelector('.local-requirements-button').onclick = () => this.requirements(model);
     card.querySelector('.model-remove').onclick = () => this.remove(model.id);
     card.querySelector('.model-download').onclick = () => {
@@ -234,7 +263,7 @@ window.VesperLocalPanel = class {
 
   requirements(model) {
     this.get('localRequirementsTitle').textContent = `${model.name} · 配置需求`;
-    this.get('localRequirementsText').textContent = `模型体积约 ${model.sizeGb} GB，参数量 ${model.params}。推荐显存 ${model.recommendedVram}、内存 ${model.recommendedRam}，按 4096 上下文评估。推荐配置为本项目估算，显存不足时可能转为较慢的 CPU 运行。`;
+    this.get('localRequirementsText').textContent = `模型体积约 ${model.sizeGb} GB，参数量 ${model.params}。推荐显存 ${model.recommendedVram}、内存 ${model.recommendedRam}，按 4096 上下文评估。推荐配置为本项目估算，显存不足时可能转为较慢的 CPU 运行。${model.description ? ' ' + model.description : ''}`;
     this.get('localRequirements').showModal(); this.get('localRequirementsClose').focus();
   }
 

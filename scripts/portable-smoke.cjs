@@ -65,9 +65,17 @@ async function until(task, ms = 30000) { const end = Date.now() + ms; while (Dat
   for (const model of catalog.filter(item => item.ollamaTag.startsWith('deepseek-r1:'))) {
     assert.equal(await js(`document.querySelector('[data-model-id="${model.id}"] h4').textContent`), model.name);
   }
+  assert.deepEqual(await js('[...document.querySelectorAll(".local-model-card h4")].map(node => node.textContent)'), catalog.map(model => model.name));
   assert.equal(await js('document.getElementById("modeBadge").textContent'), '本地部署模式');
   assert.equal(await js('localState.features.chat'), true);
-  pass('实际 EXE 显示全部模型和五种 DeepSeek，模型数据、硬件检测及面板均正常');
+  pass('实际 EXE 逐项显示完整模型目录，模型数据、硬件检测及面板均正常');
+  await js('document.getElementById("localModelFamily").value="OLMo";document.getElementById("localModelFamily").dispatchEvent(new Event("change"));true');
+  assert.equal(await js('document.querySelectorAll(".local-model-card:not([hidden])").length'), 3);
+  await js('document.getElementById("localModelSearch").value="不存在的型号";document.getElementById("localModelSearch").dispatchEvent(new Event("input"));true');
+  assert.equal(await js('document.getElementById("localModelEmpty").hidden'), false);
+  await js('document.getElementById("localModelClear").click();true');
+  assert.equal(await js('document.querySelectorAll(".local-model-card:not([hidden])").length'), catalog.length);
+  pass('实际 EXE 中搜索、系列筛选、空结果与清除操作正常');
   assert.equal(await js('typeof window.vesper.local.installRuntime'), 'function');
   assert.equal(await js('typeof window.vesper.local.cancelInstall'), 'function');
   assert.equal(await js('typeof window.vesper.local.installHelp'), 'undefined');
@@ -81,6 +89,14 @@ async function until(task, ms = 30000) { const end = Date.now() + ms; while (Dat
   await js('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
   const deepseekScreenshot = await command('Page.captureScreenshot', { format: 'png' });
   fs.writeFileSync(path.join(root, 'work/portable-deepseek-models.png'), Buffer.from(deepseekScreenshot.data, 'base64'));
+  await js('document.getElementById("localModelsTitle").scrollIntoView({block:"start"});true');
+  await js('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  const catalogScreenshot = await command('Page.captureScreenshot', { format: 'png' });
+  fs.writeFileSync(path.join(root, 'work/portable-catalog.png'), Buffer.from(catalogScreenshot.data, 'base64'));
+  await js('document.getElementById("localModelFamily").value="OLMo";document.getElementById("localModelFamily").dispatchEvent(new Event("change"));true');
+  await js('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))');
+  const openScreenshot = await command('Page.captureScreenshot', { format: 'png' });
+  fs.writeFileSync(path.join(root, 'work/portable-fully-open.png'), Buffer.from(openScreenshot.data, 'base64'));
   await js('setTimeout(() => window.close(), 50); true').catch(() => {});
   await until(() => child.exitCode !== null, 15000);
   assert.equal(JSON.parse(fs.readFileSync(path.join(profile, 'settings.json'), 'utf8')).mode, 'local');

@@ -36,7 +36,7 @@ async function startMockOllama() {
         res.writeHead(200, { 'Content-Type': 'application/x-ndjson' });
         let closed = false;
         res.on('close', () => { closed = true; state.chatCloses++; });
-        if (body.model?.startsWith('deepseek-r1:')) {
+        if (state.emitThinking || body.model?.startsWith('deepseek-r1:')) {
           res.write(`${JSON.stringify({ message: { role: 'assistant', thinking: '受控测试思考片段', content: '' }, done: false })}\n`);
           if (state.thinkingOnly) { res.end(JSON.stringify({ message: { role: 'assistant', content: '' }, done: true, done_reason: 'length' })); return; }
         }

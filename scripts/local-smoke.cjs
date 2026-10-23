@@ -57,6 +57,19 @@ async function setupWindow() {
   assert(state.hardware.result.checkedAt > 0); assert(Array.isArray(state.installedModels) || state.installedModels === null);
   assert.equal(state.features.chat, true); assert.equal(fetches, 0);
   pass('顶部按钮实际切换模式、显示全部模型卡、完成真实硬件检测且无云端请求');
+  assert.deepEqual(await js('[...document.querySelectorAll(".local-model-card h4")].map(node => node.textContent)'), catalog.map(model => model.name));
+  await js('document.getElementById("localModelSearch").value = "OLMo";document.getElementById("localModelSearch").dispatchEvent(new Event("input"))');
+  assert.equal(await js('document.querySelectorAll(".local-model-card:not([hidden])").length'), 3);
+  assert.equal(await js('document.getElementById("localModelCount").textContent'), `3 / ${catalog.length} 款本地模型`);
+  assert.match(await js('document.querySelector("[data-model-id=olmo-3-7b-instruct] .local-model-description").textContent'), /训练过程开放/);
+  await js('document.getElementById("localModelClear").click();document.getElementById("localModelFamily").value="SmolLM";document.getElementById("localModelFamily").dispatchEvent(new Event("change"))');
+  assert.equal(await js('document.querySelectorAll(".local-model-card:not([hidden])").length'), 4);
+  await js('document.getElementById("localModelSearch").value="没有这种型号";document.getElementById("localModelSearch").dispatchEvent(new Event("input"))');
+  assert.equal(await js('document.querySelectorAll(".local-model-card:not([hidden])").length'), 0);
+  assert.equal(await js('document.getElementById("localModelEmpty").hidden'), false);
+  await js('document.getElementById("localModelClear").click()');
+  assert.equal(await js('document.querySelectorAll(".local-model-card:not([hidden])").length'), catalog.length);
+  pass('完整目录逐项显示，搜索、系列联合筛选、空结果、开放类型和清除筛选均正常');
 
   await js('document.querySelector(".local-requirements-button").click()');
   assert.equal(await js('document.getElementById("localRequirements").open'), true);
@@ -204,6 +217,15 @@ async function setupWindow() {
   assert.match(await js('document.querySelectorAll(".assistant .markdown")[2].textContent'), /本机接口测试/);
   assert.match(await js('document.querySelectorAll(".assistant .message-meta")[2].textContent'), /DeepSeek/);
   pass('新增 DeepSeek 卡片可下载、选为聊天模型并正确渲染思考后的回答');
+  await js('localPanel.open();true'); await until(() => js('!localPanel.opening'));
+  await js('document.getElementById("localModelFamily").value="SmolLM";document.getElementById("localModelFamily").dispatchEvent(new Event("change"));document.querySelector("[data-model-id=smollm3-3b] .model-download").click()');
+  await until(() => js('localState.catalog.find(model => model.id === "smollm3-3b").installed === true'));
+  await invoke('local.selectModel', 'smollm3-3b'); mock.state.emitThinking = true;
+  await js('document.getElementById("localClose").click();document.getElementById("messageInput").value="Hello";document.getElementById("messageInput").dispatchEvent(new Event("input"));document.getElementById("composer").requestSubmit()');
+  await until(() => js('document.querySelectorAll(".assistant").length === 4 && !document.querySelector(".message.streaming")'));
+  assert.equal(mock.state.lastChat.model, 'hf.co/ggml-org/SmolLM3-3B-GGUF:Q4_K_M');
+  assert.match(await js('document.querySelectorAll(".assistant .markdown")[3].textContent'), /本机接口测试/);
+  pass('HF 模型在真实窗口中可筛选、下载、选择并完成聊天协议链路');
   await mock.close(); http.request = request;
   assert.equal(fetches, 0); assert.equal(errors.length, 0, errors.join('\n'));
   fs.writeFileSync(path.join(reportRoot, 'local-window-results.json'), JSON.stringify({ time: new Date().toISOString(), profile: app.getPath('userData'), results, hardware: state.hardware.result, cloudRequests: fetches, ollamaIntegrated: true, mockOllama: true, actualWeightsUsed: false }, null, 2));
